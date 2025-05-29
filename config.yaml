@@ -1,0 +1,7 @@
+
+BLACK_STONE_IMAGE_PATH: "images/stone_black.png"
+WHITE_STONE_IMAGE_PATH: "images/stone_white.png"
+BOARD_BACKGROUND_IMAGE_PATH: "images/background.png"
+FRAME_IMAGE_PATH: "images/golden_frame.png"
+GRID_IMAGE_PATH: "images/grid.png"
+PUTABLE_TILE_IMAGE_PATH: "images/tile.png"
