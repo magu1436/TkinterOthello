@@ -31,7 +31,7 @@ class History(list):
         super().append(Scene(board, turn_player))
 
 
-class DBControler:
+class DBController:
     """データベースとやりとりするためのコントローラ"""
 
     @staticmethod
