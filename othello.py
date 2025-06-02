@@ -28,13 +28,13 @@ OTHELLO_BOARD_SIZE = (8, 8)
 
 
 class OthelloException(Exception):
-    def __init__(self, *args, **kwards):
+    def __init__(self, *args, **kwargs):
         self.args = args
-        self.kwargs = kwards
+        self.kwargs = kwargs
 
 class ColorError(OthelloException):
     def __str__(self):
-        return "Some issue happend about the stone color."
+        return "Some issue happened about the stone color."
 
 class HeadcountOfPlayerError:
     """参加プレイヤーが二人でないときに生じる"""
@@ -57,7 +57,7 @@ class InvalidStonePlacementError(Exception):
         stone(Stone): 置こうとした石"""
     def __str__(self):
         stone: Stone = self.args[0]
-        return f"Invalid dtone placed at {stone.coordinate}: color {stone.color}"
+        return f"Invalid stone placed at {stone.coordinate}: color {stone.color}"
 
 
 
@@ -113,18 +113,18 @@ class OthelloGameManager(Frame):
                     init_turn_player = player
                     break
         self.players: list[OthelloPlayer, OthelloPlayer] = list(participants)
-        self.whole_dislay_size: Coordinate = Coordinate(display_size)
+        self.whole_display_name: Coordinate = Coordinate(display_size)
         self.turn_player: OthelloPlayer = init_turn_player
 
         super().__init__(
             master, 
-            width=self.whole_dislay_size.x, 
-            height=self.whole_dislay_size.y, 
+            width=self.whole_display_name.x, 
+            height=self.whole_display_name.y, 
             **kwargs
         )
         self.othello_board: OthelloBoard = OthelloBoard(
             self,
-            (self.whole_dislay_size.y, self.whole_dislay_size.y),
+            (self.whole_display_name.y, self.whole_display_name.y),
             grid_width,
         )
 
@@ -135,7 +135,7 @@ class OthelloGameManager(Frame):
         self.history.append(self.othello_board.board, self.turn_player)
         self.manager_display: ManagerDisplay = ManagerDisplay(
             self, 
-            self.whole_dislay_size - (self.othello_board.board_display_size.x, 0),
+            self.whole_display_name - (self.othello_board.board_display_size.x, 0),
             self.redo
             )
         self.manager_display.update_display(
@@ -325,7 +325,7 @@ class OthelloGameManager(Frame):
         
         Returns:
             int: 盤上の指定の色の石の数"""
-        stones = self.othello_board.get_all_peices()
+        stones = self.othello_board.get_all_pieces()
         if color is None:
             return len(stones)
         return len([stone for stone in stones if stone.color == color])

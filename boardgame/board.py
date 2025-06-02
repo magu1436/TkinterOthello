@@ -9,11 +9,11 @@ from tkinter import Canvas, Misc, Frame
 if __name__ == "__main__":
     from imagetools import BoardGamePhotoImage, get_frame_width, PathOrImage
     from utilities import Coordinate, Coordinatelike
-    from objects import Piece, Tile, Effect
+    from objects import Piece, Tile
 else:
     from .imagetools import BoardGamePhotoImage, get_frame_width, PathOrImage
     from .utilities import Coordinate, Coordinatelike
-    from .objects import Piece, Tile, Effect
+    from .objects import Piece, Tile
 
 
 # tags
@@ -21,7 +21,6 @@ BOARD_TAG = "board"
 FRAME_TAG = "frame"
 TILE_TAG = "tile"
 PIECE_TAG = "piece"
-EFFECT_TAG = "effect"
 
 
 class BoardGameException(Exception):
@@ -60,7 +59,7 @@ class Board(Frame):
             master: Misc,
             board_size: Coordinatelike, 
             background_image: PathOrImage,
-            board_display_size: Coordinatelike = None,
+            board_display_size: Coordinatelike,
             grid_image: PathOrImage | None = None,
             frame_image: PathOrImage | None = None,
             grid_display_width: int = 0,
@@ -105,7 +104,6 @@ class Board(Frame):
 
         self.__board: list[list[None | Piece]] = [[None for _ in range(self.__board_size[0])] for _ in range(self.__board_size[1])]
         self.__tiles: list[list[Tile | None]] = [[None for _ in range(self.__board_size[0])] for _ in range(self.board_size[1])]
-        self.__effects: list[list[Tile | None]] = [[None for _ in range(self.__board_size[0])] for _ in range(self.board_size[1])]
         self.__init_canvas(init_tile)
     
     @property
@@ -123,10 +121,6 @@ class Board(Frame):
     @property
     def tiles(self) -> list[list[Tile | None]]:
         return deepcopy(self.__tiles)
-    
-    @property
-    def effects(self) -> list[list[Effect | None]]:
-        return deepcopy(self.__effects)
     
     def __init_canvas(self, init_tile: Tile | None = None) -> None:
         self.__draw_board()
@@ -230,7 +224,7 @@ class Board(Frame):
             (x - fx) // (self.__space_display_size.x + self.__grid_display_width),
             (y - fy) // (self.__space_display_size.y + self.__grid_display_width)
         )
-  
+
     def is_in_board(self, coordinate: Coordinatelike) -> bool:
         """座標がボードの中であるかどうか判定するメソッド
         
@@ -247,22 +241,22 @@ class Board(Frame):
         coor = self.get_board_coor_from_tkcoor_in_board((event.x, event.y))
         tile = self.get_tile(coor)
         if tile is not None:
-            tile.on_click(self, event)
+            tile.on_click(self, tile, coor, event)
             return
         piece = self.get(coor)
         if piece is not None:
-            piece.on_click(self, event)
+            piece.on_click(self, piece, coor, event)
             return
     
     def on_release(self, event: tkinter.Event) -> None:
         coor = self.get_board_coor_from_tkcoor_in_board((event.x, event.y))
         tile = self.get_tile(coor)
         if tile is not None:
-            tile.on_release(self, event)
+            tile.on_release(self, tile, coor, event)
             return
         piece = self.get(coor)
         if piece is not None:
-            piece.on_release(self, event)
+            piece.on_release(self, piece, coor, event)
             return
 
     def reset_tiles(self, init_tile: Tile | None = None) -> None:
@@ -361,7 +355,7 @@ class Board(Frame):
         # self.__board[x][y] は誤りなので注意
         return self.__board[y][x]
     
-    def get_all_peices(self) -> list[Piece]:
+    def get_all_pieces(self) -> list[Piece]:
         return list(filter(None, [p for row in self.__board for p in row]))
 
     def take(self, coordinate: Coordinatelike) -> Piece | None:
@@ -381,9 +375,7 @@ class Board(Frame):
         return piece
     
     def take_all_pieces(self) -> list[Piece]:
-        for y in range(self.board_size.y):
-            for x in range(self.board_size.x):
-                self.take((x, y))
+        return [self.take(piece.coordinate) for piece in self.get_all_pieces()]
 
     def put(self, piece: Piece | None, coordinate: Coordinatelike) -> None:
         """指定された座標に駒を配置する. 
@@ -407,33 +399,12 @@ class Board(Frame):
     def replace(self, piece: Piece | None, coordinate: Coordinatelike) -> Piece | None:
         """指定された座標に駒を配置する.
 
-        `coordinate` が指定されていない場合は, `piece` の座標を使用する.
-        ただし、 `piece` が `None` の場合は, `coordinate` も指定しなければならない.
-
         Args:
             piece (Piece | None): 新しく置き換える駒
-            coordinate (Coordinatelike | None): 座標.
+            coordinate (Coordinatelike): 座標.
         Returns:
             Piece | None: 置き換えられた駒
         """
-
-        """x, y = coordinate
-        pre_piece = self.get(coordinate)
-        self.__erase_piese(pre_piece)
-
-        self.__board[y][x] = piece
-        self.__draw_piece(piece)
-        if piece is not None:
-            piece._Piece__coordinate = coordinate
-            if piece.auto_resize:
-                piece.image.resize(self.__space_display_size)
-        
-        if pre_piece is not None:
-            pre_piece._Piece__coordinate = None"""
-        if coordinate is None:
-            if piece is None:
-                raise ValueError("must give coordinate when putting None.")
-            coordinate = piece.coordinate
         pre_piece = self.take(coordinate)
         self.put(piece)
         return pre_piece
@@ -484,49 +455,3 @@ class Board(Frame):
         self.__erase_tile(coordinate)
         x, y = coordinate
         self.__board[y][x] = None
-
-    def cause_effect(self, effect: Effect, coordinate: Coordinatelike, layer: int = 0):
-        """指定された座標に効果を適用する
-
-        Args:
-            effect (Effect): 効果
-            coordinate (Coordinatelike): 座標
-            layer (int, optional): レイヤー. defaults to 0.
-        """
-        pass
-
-
-if __name__ == "__main__":
-    root = tkinter.Tk()
-    root.geometry("800x600")
-    root.title("test")
-
-    board = Board(
-        root, 
-        (10, 10), 
-        "images/background.png", 
-        board_display_size=(600, 600), 
-        grid_image="images/grid.png",  
-        grid_display_width=5,
-        frame_image="images/frame.png",
-    )
-    board.place(x=0, y=0)
-
-    p = Piece("images/stone_black.png", right_clicked_func=lambda board, event: print("black clicked"))
-    p1 = Piece("images/stone_white.png", right_clicked_func=lambda board, event: print("white clicked"))
-
-    board.put(p, (1, 1))
-    board.put(p1, (2, 2))
-    board.put(p.clone(), (3, 2))
-
-    def func(board: Board, event):
-        coor = board.get_board_coor_from_tkcoor_in_board((event.x, event.y))
-        if board.get(coor) is None:
-            board.put(p.clone(), coor)
-        else:
-            board.take(coor)
-
-    t = Tile("images/tile.png", right_clicked_func=func)
-    board.set_tile(t, (3, 3))
-
-    root.mainloop()

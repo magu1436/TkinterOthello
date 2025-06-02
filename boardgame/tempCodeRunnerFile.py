@@ -1,1 +1,0 @@
-type PathOrImage = str | Image.Image | ImageTk.PhotoImage | PhotoImage

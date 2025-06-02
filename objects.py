@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from tkinter import Event
 
-from boardgame import Piece, Tile
+from boardgame import Piece, Tile, BGEvent
 from systems import Color, load_config
 
 
@@ -36,8 +36,7 @@ class PutableSpaceTile(Tile):
             left_clicked_func=self.execute_put_stone,
         )
     
-    def execute_put_stone(self, othello_board , event: Event):
-        manager = othello_board.master
+    def execute_put_stone(self, event: BGEvent):
+        manager = event.board.master
         stone = Stone(manager.turn_player.color)
-        coor = othello_board.get_board_coor_from_tkcoor_in_board((event.x, event.y))
-        manager.put_stone(stone, coor)
+        manager.put_stone(stone, event.coordinate)
