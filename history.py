@@ -39,9 +39,18 @@ class DBController:
         """履歴をデータベースに保存するメソッド"""
         pass
 
+    def get_all_indexes():
+        """データベースから履歴のインデックスを取得するメソッド"""
+
+
     @staticmethod
     def restore(uuid: str | UUID) -> History:
         """データベースから履歴を復元するメソッド
         
         引数に復元したい履歴のUUIDを受け取り、それに対応した履歴を返す."""
         pass
+
+    def delete(uuid):
+        """データベースから履歴を削除するメソッド
+        
+        引数に削除したい履歴のUUIDを受け取り、その履歴をデータベースから削除する"""
