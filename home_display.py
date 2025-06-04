@@ -8,6 +8,8 @@ from boardgame.imagetools import BoardGamePhotoImage
 
 
 TITLE_LOGO_PADDING_RATIO_TO_DISPLAY = (.6, .2)
+NEW_GAME_BUTTON_TEXT = "新しいゲーム！"
+HISTORY_DISPLAY_BUTTON_TEXT = "履歴一覧"
 
 
 class HomeDisplay(Frame):
@@ -45,13 +47,49 @@ class HomeDisplay(Frame):
             anchor="nw"
         )
         
+        # 遷移ボタンの配置
+        self.new_game_button = SceneTransitionButton(
+            self, 
+            NEW_GAME_BUTTON_TEXT,
+            game_display
+        )
+        self.history_display_button = SceneTransitionButton(
+            self,
+            HISTORY_DISPLAY_BUTTON_TEXT,
+            history_display
+        )
+        button_space_size = (
+            self.__title_logo_image.width(),
+            (display_size[1] - (title_logo_place[1] + self.__title_logo_image.height())) // 2
+        )
+        button_place = (
+            display_size[0] // 2,
+            title_logo_place[1] + self.__title_logo_image.height() + button_space_size[1] // 2
+        )
+        button_size = (
+            button_space_size[0] * 2 // 3,
+            button_space_size[1] * 2 // 3
+        )
+        self.new_game_button.place(
+            x=button_place[0],
+            y=button_place[1],
+            width=button_size[0],
+            height=button_size[1],
+            anchor="center"
+        )
+        self.history_display_button.place(
+            x=button_place[0],
+            y=button_place[1] + button_space_size[1],
+            width=button_size[0],
+            height=button_size[1],
+            anchor="center"
+        )
 
 
 class SceneTransitionButton(Button):
 
-    def __init__(self, master: Misc, text: str, width: int, trans_from: Frame, trans_to: Frame):
-        super().__init__(master, text=text, width=width, command=self.trans_display)
-        self.trans_from: Frame = trans_from
+    def __init__(self, master: Misc, text: str, trans_to: Frame):
+        super().__init__(master, text=text, command=self.trans_display)
         self.trans_to: Frame = trans_to
     
     def trans_display(self):
@@ -61,4 +99,4 @@ class SceneTransitionButton(Button):
         
         TODO:
             処理の実装"""
-        pass
+        self.trans_to.tkraise()

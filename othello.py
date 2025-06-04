@@ -23,6 +23,7 @@ BOARD_BACKGROUND_IMAGE_PATH = CONFIG["BOARD_BACKGROUND_IMAGE_PATH"]
 FRAME_IMAGE_PATH = CONFIG["FRAME_IMAGE_PATH"]
 GRID_IMAGE_PATH = CONFIG["GRID_IMAGE_PATH"]
 PUTABLE_TILE_IMAGE = ["PUTABLE_TILE_IMAGE_PATH"]
+ICON_IMAGE_PATH = CONFIG["ICON_IMAGE_PATH"]
 
 OTHELLO_BOARD_SIZE = (8, 8)
 
@@ -353,8 +354,9 @@ class OthelloGameManager(Frame):
 def main():
 
     root = tkinter.Tk()
-    root.geometry("1200x600")
+    root.state("zoomed")
     root.title("othello game")
+    root.iconbitmap(default=ICON_IMAGE_PATH)
     root.update_idletasks()
 
     p1 = OthelloPlayer(Color.BLACK, "先手")

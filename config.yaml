@@ -1,4 +1,6 @@
 
+ICON_IMAGE_PATH: "images/icon.ico"
+
 TITLE_LOGO_IMAGE_PATH: "images/title_logo.png"
 HOME_BACKGROUND_IMAGE_PATH: "images/background.png"
 
