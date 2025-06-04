@@ -14,6 +14,7 @@ from objects import Stone, PutableSpaceTile
 from systems import Color, OthelloPlayer, load_config
 from history import History
 from game_display import ManagerDisplay
+from home_display import HomeDisplay
 
 
 config = load_config()
@@ -143,6 +144,9 @@ class OthelloGameManager(Frame):
             self.count_stone_amount(Color.BLACK),
             self.count_stone_amount(Color.WHITE)
         )
+        
+        self.othello_board.pack(side=tkinter.LEFT)
+        self.manager_display.pack(side=tkinter.LEFT, expand=True, fill=tkinter.BOTH)
     
     def put_initial_stone(self):
         """石を初期配置するメソッド"""
@@ -309,11 +313,6 @@ class OthelloGameManager(Frame):
                     put_tiles.append(tile)
         return put_tiles
     
-    def raedy(self) -> None:
-        self.othello_board.pack(side=tkinter.LEFT)
-        self.manager_display.pack(side=tkinter.LEFT, expand=True, fill=tkinter.BOTH)
-        self.pack(side=tkinter.LEFT)
-    
     def count_stone_amount(self, color: Color | None = None) -> int:
         """盤上の石の数を数えるためのメソッド
         
@@ -369,8 +368,11 @@ def main():
         5,
         [p1, p2],
     )
+    manager.grid(row=0, column=0, sticky="nsew")
 
-    manager.raedy()
+    home_display = HomeDisplay(root, manager, manager)
+    home_display.grid(row=0, column=0, sticky="nsew")
+    home_display.tkraise()
 
     root.mainloop()
 

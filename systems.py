@@ -9,6 +9,7 @@ from boardgame import Player
 
 CONFIG_FILE_PATH = "config.yaml"
 
+
 def load_config() -> dict:
     """config.yamlファイルを読み込み、コンフィグを読み込んで返す関数.
     
@@ -17,6 +18,9 @@ def load_config() -> dict:
     with open(CONFIG_FILE_PATH, "r") as file:
         config = safe_load(file)
     return config
+
+
+CONFIG = load_config()
 
 
 class Color(Enum):
