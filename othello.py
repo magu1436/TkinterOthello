@@ -13,7 +13,7 @@ from boardgame import Board, Tile, Coordinate
 from objects import Stone, PutableSpaceTile
 from systems import Color, OthelloPlayer, load_config
 from history import History
-from GameDisplay import ManagerDisplay
+from game_display import ManagerDisplay
 
 
 config = load_config()
