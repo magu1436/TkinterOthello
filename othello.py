@@ -11,18 +11,17 @@ from PIL import Image, ImageTk
 
 from boardgame import Board, Tile, Coordinate
 from objects import Stone, PutableSpaceTile
-from systems import Color, OthelloPlayer, load_config
+from systems import Color, OthelloPlayer, CONFIG
 from history import History
 from game_display import ManagerDisplay
 from home_display import HomeDisplay
 
 
-config = load_config()
-BLACK_STONE_IMAGE_PATH = config["BLACK_STONE_IMAGE_PATH"]
-WHITE_STONE_IMAGE_PATH = config["WHITE_STONE_IMAGE_PATH"]
-BOARD_BACKGROUND_IMAGE_PATH = config["BOARD_BACKGROUND_IMAGE_PATH"]
-FRAME_IMAGE_PATH = config["FRAME_IMAGE_PATH"]
-GRID_IMAGE_PATH = config["GRID_IMAGE_PATH"]
+BLACK_STONE_IMAGE_PATH = CONFIG["BLACK_STONE_IMAGE_PATH"]
+WHITE_STONE_IMAGE_PATH = CONFIG["WHITE_STONE_IMAGE_PATH"]
+BOARD_BACKGROUND_IMAGE_PATH = CONFIG["BOARD_BACKGROUND_IMAGE_PATH"]
+FRAME_IMAGE_PATH = CONFIG["FRAME_IMAGE_PATH"]
+GRID_IMAGE_PATH = CONFIG["GRID_IMAGE_PATH"]
 PUTABLE_TILE_IMAGE = ["PUTABLE_TILE_IMAGE_PATH"]
 
 OTHELLO_BOARD_SIZE = (8, 8)

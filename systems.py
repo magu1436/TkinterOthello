@@ -15,12 +15,13 @@ def load_config() -> dict:
     
     returns:
         dict: config.yamlの内容を保持しているdict"""
+    global CONFIG
     with open(CONFIG_FILE_PATH, "r") as file:
-        config = safe_load(file)
-    return config
+        CONFIG = safe_load(file)
 
 
-CONFIG = load_config()
+CONFIG = {}
+load_config()
 
 
 class Color(Enum):

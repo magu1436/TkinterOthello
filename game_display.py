@@ -7,7 +7,7 @@ import tkinter
 from PIL import ImageTk, Image
 
 from boardgame import Coordinate
-from systems import Color, load_config
+from systems import Color, CONFIG
 
 
 TURN_PLAYER_NAME_FONT_SIZE = 50
@@ -35,9 +35,9 @@ class CounterDisplay(Frame):
         size = Coordinate(size)
         super().__init__(master, width=size.x, height=size.y)
         if color == Color.BLACK:
-            image_path = load_config()["BLACK_STONE_IMAGE_PATH"]
+            image_path = CONFIG["BLACK_STONE_IMAGE_PATH"]
         else:
-            image_path = load_config()["WHITE_STONE_IMAGE_PATH"]
+            image_path = CONFIG["WHITE_STONE_IMAGE_PATH"]
         canvas_size = size // 2
         self.canvas = Canvas(self, width=canvas_size.x, height=canvas_size.y)
         self.stone_image = ImageTk.PhotoImage(Image.open(image_path))

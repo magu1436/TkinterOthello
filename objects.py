@@ -4,12 +4,12 @@ from __future__ import annotations
 from tkinter import Event
 
 from boardgame import Piece, Tile, BGEvent
-from systems import Color, load_config
+from systems import Color, CONFIG
 
 
-BLACK_STONE_IMAGE = load_config()["BLACK_STONE_IMAGE_PATH"]
-WHITE_STONE_IMAGE = load_config()["WHITE_STONE_IMAGE_PATH"]
-PUTABLE_TILE_IMAGE = load_config()["PUTABLE_TILE_IMAGE_PATH"]
+BLACK_STONE_IMAGE = CONFIG["BLACK_STONE_IMAGE_PATH"]
+WHITE_STONE_IMAGE = CONFIG["WHITE_STONE_IMAGE_PATH"]
+PUTABLE_TILE_IMAGE = CONFIG["PUTABLE_TILE_IMAGE_PATH"]
 
 
 
