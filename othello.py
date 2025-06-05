@@ -92,6 +92,15 @@ class OthelloBoard(Board):
             FRAME_IMAGE_PATH,
             grid_width,
             )
+        self.init_board()
+    
+    def init_board(self):
+        """石を初期配置するメソッド"""
+        self.take_all_pieces()
+        self.put(Stone.create(Color.WHITE), (OTHELLO_BOARD_SIZE[0] // 2 - 1, OTHELLO_BOARD_SIZE[1] // 2 - 1))
+        self.put(Stone.create(Color.BLACK), (OTHELLO_BOARD_SIZE[0] // 2, OTHELLO_BOARD_SIZE[1] // 2 - 1))
+        self.put(Stone.create(Color.BLACK), (OTHELLO_BOARD_SIZE[0] // 2 - 1, OTHELLO_BOARD_SIZE[1] // 2))
+        self.put(Stone.create(Color.WHITE), (OTHELLO_BOARD_SIZE[0] // 2, OTHELLO_BOARD_SIZE[1] // 2))
 
 
 class OthelloGameManager(Frame):
@@ -103,19 +112,13 @@ class OthelloGameManager(Frame):
             display_size: Coordinate | tuple[int, int],
             grid_width: Coordinate | tuple[int, int],
             participants: Sequence[OthelloPlayer],
-            init_turn_player: OthelloPlayer = None,
             **kwargs):
         
         if len(participants) != 2:
             raise HeadcountOfPlayerError()
-        if init_turn_player is None:
-            for player in participants:
-                if player.color == Color.BLACK:
-                    init_turn_player = player
-                    break
+
         self.players: list[OthelloPlayer, OthelloPlayer] = list(participants)
         self.whole_display_name: Coordinate = Coordinate(display_size)
-        self.turn_player: OthelloPlayer = init_turn_player
 
         super().__init__(
             master, 
@@ -129,16 +132,26 @@ class OthelloGameManager(Frame):
             grid_width,
         )
 
-        self.put_initial_stone()
-        self.set_putable_tiles(self.turn_player.color)
-
-        self.history: History = History()
-        self.history.append(self.othello_board.board, self.turn_player)
         self.manager_display: ManagerDisplay = ManagerDisplay(
             self, 
             self.whole_display_name - (self.othello_board.board_display_size.x, 0),
             self.redo
             )
+        
+        self.start_new_game()
+    
+    def start_new_game(self):
+        """盤面を初期化して、新しいゲームを始めるためのメソッド"""
+        for player in self.players:
+            if player.color == Color.BLACK:
+                self.turn_player: OthelloPlayer = player
+                break
+
+        self.othello_board.init_board()
+        self.set_putable_tiles(self.turn_player.color)
+        
+        self.history: History = History()
+        self.history.append(self.othello_board.board, self.turn_player)
         self.manager_display.update_display(
             self.turn_player.name,
             self.count_stone_amount(Color.BLACK),
@@ -147,13 +160,6 @@ class OthelloGameManager(Frame):
         
         self.othello_board.pack(side=tkinter.LEFT)
         self.manager_display.pack(side=tkinter.LEFT, expand=True, fill=tkinter.BOTH)
-    
-    def put_initial_stone(self):
-        """石を初期配置するメソッド"""
-        self.othello_board.put(Stone.create(Color.WHITE), (OTHELLO_BOARD_SIZE[0] // 2 - 1, OTHELLO_BOARD_SIZE[1] // 2 - 1))
-        self.othello_board.put(Stone.create(Color.BLACK), (OTHELLO_BOARD_SIZE[0] // 2, OTHELLO_BOARD_SIZE[1] // 2 - 1))
-        self.othello_board.put(Stone.create(Color.BLACK), (OTHELLO_BOARD_SIZE[0] // 2 - 1, OTHELLO_BOARD_SIZE[1] // 2))
-        self.othello_board.put(Stone.create(Color.WHITE), (OTHELLO_BOARD_SIZE[0] // 2, OTHELLO_BOARD_SIZE[1] // 2))
     
     def flip(self, stone: Stone):
         """石をひっくり返すメソッド
@@ -265,16 +271,13 @@ class OthelloGameManager(Frame):
         # 次のプレイヤーへ
         self.change_turn()
     
-    def change_turn(self, new_turn_player: OthelloPlayer = None):
-        """ターンプレイヤーを変更するためのメソッド"""
+    def change_turn(self):
+        """ターンプレイヤー変更時の処理を行うメソッド"""
 
         # 新しいターンプレイヤーの設定
-        if new_turn_player is None:
-            for p in self.players:
-                if p != self.turn_player:
-                   new_turn_player = p 
-        if new_turn_player not in self.players:
-            raise NotJoiningPlayerError(new_turn_player)
+        for p in self.players:
+            if p != self.turn_player:
+                new_turn_player = p
         self.turn_player = new_turn_player
 
         # ManagerDisplayの更新
