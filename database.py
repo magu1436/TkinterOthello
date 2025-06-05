@@ -22,7 +22,7 @@ class MysqlController:
              CREATE TABLE IF NOT EXISTS history_list(
                        uuid BINARY(16) PRIMARY KEY,
                        title DATE,
-                       is_finished BOOREAN
+                       is_finished BOOLEAN
              )
         """)
 
@@ -103,19 +103,25 @@ class MysqlController:
          """
          return json.dumps(target)
     
-    def save(self, history: History):
+    def save(self, history: History) -> None:
+        """履歴をデータベースへ保存するメソッド
         
-        # Historyオブジェクトからuuidとtitleを取得
+        Args:
+            history(History): データベースへ保存する履歴
+
+        """
+        # Historyオブジェクトからuuid,title,is_finishedを取得
         uuid_str = history.uuid
         title = history.title
+        is_finished = history.is_finished
 
         # 取得したuuidをbytes型に変換
         uuid_bytes = uuid_str.encode("utf-8")
 
         # history_listテーブルにデータを追加
         self.cursor.execute("""
-            INSERT INTO history_list (uuid, title) VALUES (%s, %s)
-        """, (uuid_bytes, title))
+            INSERT INTO history_list (uuid, title, is_finished) VALUES (%s, %s, %s)
+        """, (uuid_bytes, title, is_finished))
 
          # HistoryオブジェクトからSceneオブジェクトを1つずつ取り出す
         for scene in history:

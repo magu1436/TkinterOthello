@@ -25,6 +25,7 @@ class History(list):
 
         self.uuid = str(uuid4())
         self.title = date.today()
+        self.is_finished = False
     
     def append(self, board: list[list[None | Stone]], turn_player: OthelloPlayer) -> None:
         """履歴にシーンを追加するメソッド
