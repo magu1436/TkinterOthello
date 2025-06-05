@@ -15,6 +15,7 @@ from systems import Color, OthelloPlayer, CONFIG
 from history import History
 from game_display import ManagerDisplay
 from home_display import HomeDisplay
+from display_items import Display
 
 
 BLACK_STONE_IMAGE_PATH = CONFIG["BLACK_STONE_IMAGE_PATH"]
@@ -124,6 +125,7 @@ class OthelloGameManager(Frame):
             master, 
             width=self.whole_display_size.x, 
             height=self.whole_display_size.y, 
+            name=Display.GAME.value,
             **kwargs
         )
         self.othello_board: OthelloBoard = OthelloBoard(
@@ -135,8 +137,12 @@ class OthelloGameManager(Frame):
         self.manager_display: ManagerDisplay = ManagerDisplay(
             self, 
             self.whole_display_size - (self.othello_board.board_display_size.x, 0),
-            self.redo
+            self.redo,
+            self.start_new_game
             )
+        
+        self.othello_board.pack(side=tkinter.LEFT)
+        self.manager_display.pack(side=tkinter.LEFT, expand=True, fill=tkinter.BOTH)
         
         self.start_new_game()
     
@@ -146,6 +152,9 @@ class OthelloGameManager(Frame):
             if player.color == Color.BLACK:
                 self.turn_player: OthelloPlayer = player
                 break
+
+        for player in self.players:
+            player.can_put = True
 
         self.othello_board.init_board()
         self.set_putable_tiles(self.turn_player.color)
@@ -157,9 +166,6 @@ class OthelloGameManager(Frame):
             self.count_stone_amount(Color.BLACK),
             self.count_stone_amount(Color.WHITE)
         )
-        
-        self.othello_board.pack(side=tkinter.LEFT)
-        self.manager_display.pack(side=tkinter.LEFT, expand=True, fill=tkinter.BOTH)
     
     def flip(self, stone: Stone):
         """石をひっくり返すメソッド
@@ -333,12 +339,15 @@ class OthelloGameManager(Frame):
         return len([stone for stone in stones if stone.color == color])
     
     def end(self):
-        """勝敗が決まったあとに呼び出される処理
-        
-        TODO:
-            ManagerDisplayの下半分の部分にどっちが勝ったか出力する"""
-        print(f"黒: {self.count_stone_amount(Color.BLACK)}")
-        print(f"白: {self.count_stone_amount(Color.WHITE)}")
+        """勝敗が決まったあとに呼び出される処理"""
+        black_stone_amount = self.count_stone_amount(Color.BLACK)
+        white_stone_amount = self.count_stone_amount(Color.WHITE)
+        if black_stone_amount > white_stone_amount:
+            winner_color = Color.BLACK
+        else:
+            winner_color = Color.WHITE
+        winner = self.players[0] if self.players[0].color == winner_color else self.players[1]
+        self.manager_display.indicate_victory_scene(winner)
     
     def redo(self):
         """一手戻る処理を行うメソッド."""
@@ -376,6 +385,7 @@ def main():
 
     home_display = HomeDisplay(root, manager, manager)
     home_display.grid(row=0, column=0, sticky="nsew")
+
     home_display.tkraise()
 
     root.mainloop()

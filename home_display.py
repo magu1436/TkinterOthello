@@ -5,6 +5,7 @@ from tkinter.ttk import Button
 
 from systems import CONFIG
 from boardgame.imagetools import BoardGamePhotoImage
+from display_items import SceneTransitionButton, Display
 
 
 TITLE_LOGO_PADDING_RATIO_TO_DISPLAY = (.6, .2)
@@ -17,7 +18,7 @@ class HomeDisplay(Frame):
     def __init__(self, master: Misc, game_display: Frame, history_display: Frame):
         master.update_idletasks()
         display_size = (master.winfo_width(), master.winfo_height())
-        super().__init__(master, width=display_size[0], height=display_size[1])
+        super().__init__(master, width=display_size[0], height=display_size[1], name=Display.HOME.value)
         self.__title_logo_image = BoardGamePhotoImage(CONFIG["TITLE_LOGO_IMAGE_PATH"])
         self.__bg_image = BoardGamePhotoImage(CONFIG["HOME_BACKGROUND_IMAGE_PATH"])
 
@@ -51,12 +52,12 @@ class HomeDisplay(Frame):
         self.new_game_button = SceneTransitionButton(
             self, 
             NEW_GAME_BUTTON_TEXT,
-            game_display
+            Display.GAME
         )
         self.history_display_button = SceneTransitionButton(
             self,
             HISTORY_DISPLAY_BUTTON_TEXT,
-            history_display
+            Display.HISTORY
         )
         button_space_size = (
             self.__title_logo_image.width(),
@@ -84,19 +85,3 @@ class HomeDisplay(Frame):
             height=button_size[1],
             anchor="center"
         )
-
-
-class SceneTransitionButton(Button):
-
-    def __init__(self, master: Misc, text: str, trans_to: Frame):
-        super().__init__(master, text=text, command=self.trans_display)
-        self.trans_to: Frame = trans_to
-    
-    def trans_display(self):
-        """クリックされたときの処理
-        
-        もとの画面を非表示にして、遷移先の画面を表示にし、シーン遷移を表現する.
-        
-        TODO:
-            処理の実装"""
-        self.trans_to.tkraise()

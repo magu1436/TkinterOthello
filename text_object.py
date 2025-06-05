@@ -39,11 +39,12 @@ class AutoFontLabel(Label):
 
         min_size, max_size = 1, 200
         best_size = min_size
+        test_font = self.font.copy()
 
         while min_size < max_size:
             mid = (min_size + max_size) // 2
-            self.font.configure(size=mid)
-            text_width = self.font.measure(self.text.get())
+            test_font.configure(size=mid)
+            text_width = test_font.measure(self.text.get())
 
             if text_width <= display_width:
                 best_size = mid
