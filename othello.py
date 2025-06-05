@@ -118,23 +118,23 @@ class OthelloGameManager(Frame):
             raise HeadcountOfPlayerError()
 
         self.players: list[OthelloPlayer, OthelloPlayer] = list(participants)
-        self.whole_display_name: Coordinate = Coordinate(display_size)
+        self.whole_display_size: Coordinate = Coordinate(display_size)
 
         super().__init__(
             master, 
-            width=self.whole_display_name.x, 
-            height=self.whole_display_name.y, 
+            width=self.whole_display_size.x, 
+            height=self.whole_display_size.y, 
             **kwargs
         )
         self.othello_board: OthelloBoard = OthelloBoard(
             self,
-            (self.whole_display_name.y, self.whole_display_name.y),
+            (self.whole_display_size.y, self.whole_display_size.y),
             grid_width,
         )
 
         self.manager_display: ManagerDisplay = ManagerDisplay(
             self, 
-            self.whole_display_name - (self.othello_board.board_display_size.x, 0),
+            self.whole_display_size - (self.othello_board.board_display_size.x, 0),
             self.redo
             )
         

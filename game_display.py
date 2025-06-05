@@ -8,6 +8,7 @@ from PIL import ImageTk, Image
 
 from boardgame import Coordinate
 from systems import Color, CONFIG
+from text_object import AutoFontLabel
 
 
 TURN_PLAYER_NAME_FONT_SIZE = 50
@@ -99,6 +100,10 @@ class ManagerDisplay(Frame):
         self.black_stone_counter.grid(row=1, column=0, sticky=tkinter.W+tkinter.E)
         self.white_stone_counter.grid(row=1, column=1, sticky=tkinter.W+tkinter.E)
         self.redo_button.grid(row=2, column=0, columnspan=2, sticky=tkinter.W+tkinter.E)
+
+        ##############################
+        AutoFontLabel(self, "this is test text", display_width=self.display_size[0]).grid(row=3, column=0, columnspan=2)
+        ################################
 
     def update_display(
             self,
