@@ -1,6 +1,7 @@
 
 from dataclasses import dataclass
-from uuid import UUID
+from uuid import uuid4
+from datetime import date
 
 from objects import Stone
 from systems import OthelloPlayer
@@ -21,6 +22,9 @@ class History(list):
     """
     def __init__(self):
         super().__init__()
+
+        self.uuid = str(uuid4())
+        self.title = date.today()
     
     def append(self, board: list[list[None | Stone]], turn_player: OthelloPlayer) -> None:
         """履歴にシーンを追加するメソッド
@@ -29,7 +33,6 @@ class History(list):
             board(list[list[None | Stone]]): ボード状況を保持する二次元リスト
             turn_player(OthelloPlayer): ターンプレイヤー"""
         super().append(Scene(board, turn_player))
-
 
 class DBController:
     """データベースとやりとりするためのコントローラ"""
@@ -44,13 +47,13 @@ class DBController:
 
 
     @staticmethod
-    def restore(uuid: str | UUID) -> History:
+    def restore(uuid: str ) -> History:
         """データベースから履歴を復元するメソッド
         
         引数に復元したい履歴のUUIDを受け取り、それに対応した履歴を返す."""
         pass
 
-    def delete(uuid):
+    def delete(uuid: str):
         """データベースから履歴を削除するメソッド
         
         引数に削除したい履歴のUUIDを受け取り、その履歴をデータベースから削除する"""
