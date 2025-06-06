@@ -2,7 +2,7 @@ import mysql.connector
 import json
 from uuid import uuid4, UUID
 
-from history import Scene, History
+from history import *
 from objects import Stone
 from systems import *
 
@@ -225,7 +225,7 @@ class MysqlController:
         # 引数として受け取ったuuidをbytes型に変換
         uuid_bytes = UUID(uuid).bytes
 
-        # uuidカラムの値がuuid_bytesと一致するデータを取得
+        # scene_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを取得
         self.cursor.execute("""
             SELECT board_status, turn_player FROM scene_list WHERE history_id = %s
         """, (uuid_bytes,))
@@ -254,7 +254,7 @@ class MysqlController:
         引数に削除したい履歴のUUIDを受け取り、その履歴をデータベースから削除する
         
         Args:
-            uuid(str): 復元したい履歴に割り当てられているid
+            uuid(str): 削除したい履歴に割り当てられているid
 
         """
         # 引数として受け取ったuuidをbytes型に変換
@@ -270,4 +270,31 @@ class MysqlController:
             DELETE FROM history_list WHERE uuid = %s
         """, (uuid_bytes,))
 
+        # データベースの変更を確定
         self.conn.commit()
+
+    def get_all_indexes(self, uuid:str) -> Index:
+        """データベースから履歴のインデックスを取得するメソッド
+        
+        Args:
+            uuid(str): 取得したいインデックスに割り当てられているid
+
+        Returns:
+            Index: history_viewで表示するデータ
+
+        """
+        # 引数として受け取ったuuidをbytes型に変換
+        uuid_bytes = UUID(uuid).bytes
+
+        # history_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを取得
+        self.cursor.execute("""
+            SELECT uuid, title, is_finished FROM history_list WHERE uuid = %s
+        """, (uuid_bytes,))
+
+        # SELECT文の結果を取得
+        row:tuple = self.cursor.fetchone()
+
+        # 取得したデータからIndexオブジェクトを作成
+        index = Index(*row)
+
+        return index

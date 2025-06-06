@@ -14,6 +14,14 @@ class Scene:
     turn_player: OthelloPlayer
 
 
+@dataclass
+class Index:
+    """history_viewで表示するデータ(インデックス)を保持するデータクラス"""
+    uuid: str
+    title: date
+    is_finished: bool
+    
+
 class History(list):
     """履歴を表すクラス
     
