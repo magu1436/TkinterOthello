@@ -3,7 +3,7 @@ import json
 
 from history import Scene, History
 from objects import Stone
-from systems import Color, load_config
+from systems import *
 
 class MysqlController:
     """MySQLの基本操作を行うクラス"""
@@ -37,8 +37,11 @@ class MysqlController:
             )
         """)
 
-    def get_board(self, scene: Scene) -> list :
-        """Sceneオブジェクトからboardオブジェクトを取得し、文字列として保存するメソッド
+    def convert_board_to_list(self, scene: Scene) -> list :
+        """Sceneオブジェクトからboardオブジェクトを取得し、listに変換するメソッド
+
+        要素は、下記のように型変換を行う
+        Stoneオブジェクト → str型 , None → None 
         
         Args:
             scene(Scene): 一場面を保持するデータクラス
@@ -103,6 +106,65 @@ class MysqlController:
          """
          return json.dumps(target)
     
+    def convert_json_to_list(self, target:str) -> list:
+        """json形式のデータをlistに変換するメソッド
+        
+        Args:
+            target(str): listに変換したいjson形式のデータ
+
+        Returns:
+            list: 変換されたlist型のデータ
+        """
+        return json.loads(target)
+    
+    def convert_list_to_board(self, target_list:list) -> list:
+        """受け取ったlistをboardに変換するメソッド
+        
+        listの各要素は、下記のように型変換を行う
+        str型(BLACK or WHITE) → Stoneオブジェクト , None → None
+
+        Args:
+            target_list(list): 変換の対象となる二次元list
+
+        Returns:
+            scene(Scene): 一場面を保持するデータクラス
+
+        """
+        board = []
+
+        for row in target_list:
+
+            board_row = []
+
+            for element in row:
+
+                # 取り出した要素がstr型だった場合
+                if isinstance(element, str):
+
+                    if element == "BLACK":
+                        stone = Stone.create(Color.BLACK)
+                    
+                    elif element == "WHITE":
+                        stone = Stone.create(Color.WHITE)
+
+                    board_row.append(stone)
+
+                else:
+                    board_row.append(None)
+
+            board.append(board_row)
+
+        return board
+
+    def convert_str_to_turnplayer(self, target_str) -> OthelloPlayer:
+        """受け取ったstrをturn_playerとして返すメソッド
+        """
+        if target_str == "BLACK":
+            return OthelloPlayer(Color.BLACK, "先手")
+        
+        elif target_str == "WHITE":
+            return OthelloPlayer(Color.WHITE, "後手")
+    
     def save(self, history: History) -> None:
         """履歴をデータベースへ保存するメソッド
         
@@ -130,7 +192,7 @@ class MysqlController:
             turn_player = self.get_turn_player(scene)
             
             # Sceneオブジェクトから盤面状態をリストとして取得
-            board_list = self.get_board(scene)
+            board_list = self.convert_board_to_list(scene)
 
             # 盤面状態のリストをjson形式に変換
             board_json = self.convert_to_json(board_list)
@@ -142,3 +204,44 @@ class MysqlController:
 
         # データベースの変更を確定
         self.conn.commit()
+
+    def restore(self, uuid: str ) -> History:
+        """データベースから履歴を復元するメソッド
+        
+        引数に復元したい履歴のUUIDを受け取り、それに対応したboardとturn_playerをscene_listテーブルから取得する。
+        取得したboardとturn_playerを基にHistoryオブジェクトを作成し、戻り値として返す。
+        
+        Args:
+            uuid(str): 復元したい履歴に割り当てられているid
+
+        Returns:
+            History: 復元する履歴
+        """
+        # Historyオブジェクトの作成
+        history = History()
+
+        # 引数として受け取ったuuidをbytes型に変換
+        uuid_bytes = uuid.encode("utf-8")
+
+        # uuidカラムの値がuuid_bytesと一致するデータを取得
+        self.cursor.execute("""
+            SELECT board_status, turn_player FROM scene_list WHERE history_id = %s
+        """, (uuid_bytes,))
+
+        rows: list[tuple] = self.cursor.fetchall()
+
+        for board_json, turn_player_str in rows:
+
+            # json形式で取得したboardのデータをlist形式に変換
+            board_list = self.convert_json_to_list(board_json)
+
+            # list形式に変換されたboardのデータをboardの形式に修正
+            board = self.convert_list_to_board(board_list)
+
+            # str型で取得したturn_playerのデータをOhelloPlayerオブジェクトに変換
+            turn_player = self.convert_str_to_turnplayer(turn_player_str)
+
+            # 変換,修正したboardとturn_playerを用いてSceneオブジェクトを作成し、Historyオブジェクトへ追加
+            history.append(board, turn_player)
+
+        return history
