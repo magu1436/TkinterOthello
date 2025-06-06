@@ -1,5 +1,6 @@
 import mysql.connector
 import json
+from uuid import uuid4, UUID
 
 from history import Scene, History
 from objects import Stone
@@ -9,11 +10,12 @@ class MysqlController:
     """MySQLの基本操作を行うクラス"""
 
     def __init__(self):
+        config = load_config()
         self.conn = mysql.connector.connect(
-            host = load_config()["sql_host"],
-            user = load_config()["sql_user"],
-            password = load_config()["sql_password"],
-            database = load_config()["sql_database"]
+            host = config["sql_host"],
+            user = config["sql_user"],
+            password = config["sql_password"],
+            database = config["sql_database"]
         )
         self.cursor = self.conn.cursor()
 
@@ -156,7 +158,7 @@ class MysqlController:
 
         return board
 
-    def convert_str_to_turnplayer(self, target_str) -> OthelloPlayer:
+    def convert_str_to_turnplayer(self, target_str:str) -> OthelloPlayer:
         """受け取ったstrをturn_playerとして返すメソッド
         """
         if target_str == "BLACK":
@@ -178,7 +180,7 @@ class MysqlController:
         is_finished = history.is_finished
 
         # 取得したuuidをbytes型に変換
-        uuid_bytes = uuid_str.encode("utf-8")
+        uuid_bytes = UUID(uuid_str).bytes
 
         # history_listテーブルにデータを追加
         self.cursor.execute("""
@@ -209,7 +211,7 @@ class MysqlController:
         """データベースから履歴を復元するメソッド
         
         引数に復元したい履歴のUUIDを受け取り、それに対応したboardとturn_playerをscene_listテーブルから取得する。
-        取得したboardとturn_playerを基にHistoryオブジェクトを作成し、戻り値として返す。
+        取得したboardとturn_playerを基にSceneオブジェクトを作成し、それをHistoryオブジェクトに追加、戻り値として返す。
         
         Args:
             uuid(str): 復元したい履歴に割り当てられているid
@@ -221,7 +223,7 @@ class MysqlController:
         history = History()
 
         # 引数として受け取ったuuidをbytes型に変換
-        uuid_bytes = uuid.encode("utf-8")
+        uuid_bytes = UUID(uuid).bytes
 
         # uuidカラムの値がuuid_bytesと一致するデータを取得
         self.cursor.execute("""
@@ -245,3 +247,27 @@ class MysqlController:
             history.append(board, turn_player)
 
         return history
+
+    def delete(self, uuid: str) -> None:
+        """データベースから履歴を削除するメソッド
+        
+        引数に削除したい履歴のUUIDを受け取り、その履歴をデータベースから削除する
+        
+        Args:
+            uuid(str): 復元したい履歴に割り当てられているid
+
+        """
+        # 引数として受け取ったuuidをbytes型に変換
+        uuid_bytes = UUID(uuid).bytes
+
+        # scene_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを削除
+        self.cursor.execute("""
+            DELETE FROM scene_list WHERE history_id = %s
+        """, (uuid_bytes,))
+
+        # history_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを削除
+        self.cursor.execute("""
+            DELETE FROM history_list WHERE uuid = %s
+        """, (uuid_bytes,))
+
+        self.conn.commit()

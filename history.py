@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from uuid import uuid4
+from uuid import uuid4, UUID
 from datetime import date
 
 from objects import Stone
