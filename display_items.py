@@ -1,7 +1,7 @@
 
 from typing import Callable
 from enum import StrEnum
-from tkinter import Misc, Frame
+from tkinter import Misc
 from tkinter.ttk import Button
 
 

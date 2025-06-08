@@ -54,7 +54,7 @@ class CounterDisplay(Frame):
         
         Args:
             count(int): 表示する枚数"""
-        self.label["text"] = str(count)
+        self.label.set_text(str(count))
 
 
 class TurnPlayerDisplay(AutoFontLabel):

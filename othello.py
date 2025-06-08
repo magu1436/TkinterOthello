@@ -259,7 +259,7 @@ class OthelloGameManager(Frame):
         # 置くことが可能か判定し、フリップを行う方向のリストを取得する
         flip_directions = self.get_flipable_direction(put_stone.color, coordinate)
         if (self.othello_board.get(coordinate) is not None) or (len(flip_directions) == 0):
-            raise InvalidStonePlacementError()
+            raise InvalidStonePlacementError(put_stone)
         
         # 置く前に履歴の保存
         self.history.append(self.othello_board.board, self.turn_player)
@@ -351,7 +351,7 @@ class OthelloGameManager(Frame):
     
     def redo(self):
         """一手戻る処理を行うメソッド."""
-        if len(self.history) < 1:
+        if len(self.history) <= 1:
             return
         history: History = self.history.pop()
         board = history.board
@@ -359,7 +359,7 @@ class OthelloGameManager(Frame):
         for x in range(self.othello_board.board_size.x):
             for y in range(self.othello_board.board_size.y):
                 self.othello_board.put(board[y][x], (x, y))
-        self.change_turn(history.turn_player)
+        self.change_turn()
 
 
 

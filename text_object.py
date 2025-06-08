@@ -25,11 +25,13 @@ class AutoFontLabel(Label):
         self.text: StringVar = StringVar()
         self.text.set(text)
 
-        self.font: Font = Font(family=font_family)
-        super().__init__(master, font=self.font, textvariable=self.text, **kwargs)
-
         if display_width is None:
             display_width = master.winfo_width()
+        
+        self.width = display_width
+
+        self.font: Font = Font(family=font_family)
+        super().__init__(master, font=self.font, textvariable=self.text, **kwargs)
         self.set_font_size_fit_to_width(display_width)
     
     def set_font_size_fit_to_width(self, display_width: int):
@@ -63,6 +65,5 @@ class AutoFontLabel(Label):
         Args:
             text(str): 変更後の文字列
         """
-        width = self.winfo_width()
         self.text.set(text)
-        self.set_font_size_fit_to_width(width)
+        self.set_font_size_fit_to_width(self.width)
