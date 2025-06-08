@@ -5,8 +5,3 @@ BOARD_BACKGROUND_IMAGE_PATH: "images/background.png"
 FRAME_IMAGE_PATH: "images/golden_frame.png"
 GRID_IMAGE_PATH: "images/grid.png"
 PUTABLE_TILE_IMAGE_PATH: "images/tile.png"
-
-sql_host: "your host name"
-sql_user: "your user name"
-sql_password: "your password"
-sql_database: "your database name"

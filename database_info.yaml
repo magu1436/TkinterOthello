@@ -1,0 +1,5 @@
+
+sql_host: "your host name"
+sql_user: "your user name"
+sql_password: "your password"
+sql_database: "your database name"
