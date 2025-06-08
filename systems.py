@@ -10,11 +10,8 @@ from boardgame import Player
 CONFIG_FILE_PATH = "config.yaml"
 
 
-def load_config() -> dict:
-    """config.yamlファイルを読み込み、コンフィグを読み込んで返す関数.
-    
-    returns:
-        dict: config.yamlの内容を保持しているdict"""
+def load_config():
+    """config.yamlファイルを読み込み、コンフィグを読み込む."""
     global CONFIG
     with open(CONFIG_FILE_PATH, "r") as file:
         CONFIG = safe_load(file)

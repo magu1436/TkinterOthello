@@ -10,6 +10,7 @@ class Display(StrEnum):
     HOME = "home"
     GAME = "game"
     HISTORY = "history"
+    SPECTATOR = "spectator"
 
 
 class SceneTransitionButton(Button):
