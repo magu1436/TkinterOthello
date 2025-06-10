@@ -331,31 +331,23 @@ class DBController:
         cls.conn.commit()
 
     @classmethod
-    def get_all_indexes(cls, uuid:str) -> Index:
+    def get_all_indexes(cls) -> list[tuple]:
         """データベースから履歴のインデックスを取得するメソッド
-        
-        Args:
-            uuid(str): 取得したいインデックスに割り当てられているid
 
         Returns:
-            Index: history_viewで表示するデータ
+            list[taple]: history_viewで表示する全データのindex(uuid, title, is_finished)
 
         """
         # データベースへの接続確認
         cls.initialize()
 
-        # 引数として受け取ったuuidをbytes型に変換
-        uuid_bytes = UUID(uuid).bytes
-
-        # history_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを取得
+        # history_listテーブルから、全データのindexを取得
         cls.cursor.execute("""
-            SELECT uuid, title, is_finished FROM history_list WHERE uuid = %s
-        """, (uuid_bytes,))
+            SELECT uuid, title, is_finished FROM history_list
+        """)
 
         # SELECT文の結果を取得
-        row:tuple = cls.cursor.fetchone()
+        row:list[tuple] = cls.cursor.fetchall()
 
-        # 取得したデータからIndexオブジェクトを作成
-        index = Index(*row)
-
-        return index
+        # 取得したデータを戻り値として返す
+        return row

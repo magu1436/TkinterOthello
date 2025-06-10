@@ -15,6 +15,7 @@ from systems import Color, OthelloPlayer, CONFIG
 from history import History
 from game_display import ManagerDisplay
 from home_display import HomeDisplay
+from history_display import HistoryDisplay
 from display_items import Display
 
 
@@ -382,6 +383,9 @@ def main():
         [p1, p2],
     )
     manager.grid(row=0, column=0, sticky="nsew")
+
+    history_display = HistoryDisplay(root)
+    history_display.grid(row=0, column=0, sticky="nsew")
 
     home_display = HomeDisplay(root, manager, manager)
     home_display.grid(row=0, column=0, sticky="nsew")
