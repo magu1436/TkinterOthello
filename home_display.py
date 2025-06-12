@@ -57,7 +57,8 @@ class HomeDisplay(Frame):
         self.history_display_button = SceneTransitionButton(
             self,
             HISTORY_DISPLAY_BUTTON_TEXT,
-            Display.HISTORY
+            Display.HISTORY,
+            state="disable"
         )
         button_space_size = (
             self.__title_logo_image.width(),
