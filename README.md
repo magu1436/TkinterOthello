@@ -104,5 +104,4 @@ WHITE_STONE_IMAGE_PATH: "images/stone_white.png"
 https://github.com/magu1436/TkinterBoardGame.git
 
 ---
-フォークして自由に改造してください。
 
