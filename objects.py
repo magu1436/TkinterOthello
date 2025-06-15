@@ -1,15 +1,20 @@
 
 from __future__ import annotations
 
-from tkinter import Event
+from tkinter import Misc
 
-from boardgame import Piece, Tile, BGEvent
+from boardgame import Piece, Tile, BGEvent, Board
 from systems import Color, CONFIG
 
+OTHELLO_BOARD_SIZE = (8, 8)
 
 BLACK_STONE_IMAGE = CONFIG["BLACK_STONE_IMAGE_PATH"]
 WHITE_STONE_IMAGE = CONFIG["WHITE_STONE_IMAGE_PATH"]
 PUTABLE_TILE_IMAGE = CONFIG["PUTABLE_TILE_IMAGE_PATH"]
+
+BOARD_BACKGROUND_IMAGE_PATH = CONFIG["BOARD_BACKGROUND_IMAGE_PATH"]
+FRAME_IMAGE_PATH = CONFIG["FRAME_IMAGE_PATH"]
+GRID_IMAGE_PATH = CONFIG["GRID_IMAGE_PATH"]
 
 
 
@@ -40,3 +45,30 @@ class PutableSpaceTile(Tile):
         manager = event.board.master
         stone = Stone(manager.turn_player.color)
         manager.put_stone(stone, event.coordinate)
+
+class OthelloBoard(Board):
+
+    def __init__(
+            self, 
+            master: Misc, 
+            board_display_size: tuple[int, int], 
+            grid_width: int,
+        ):
+        super().__init__(
+            master, 
+            OTHELLO_BOARD_SIZE, 
+            BOARD_BACKGROUND_IMAGE_PATH,
+            board_display_size,
+            GRID_IMAGE_PATH,
+            FRAME_IMAGE_PATH,
+            grid_width,
+            )
+        self.init_board()
+    
+    def init_board(self):
+        """石を初期配置するメソッド"""
+        self.take_all_pieces()
+        self.put(Stone.create(Color.WHITE), (OTHELLO_BOARD_SIZE[0] // 2 - 1, OTHELLO_BOARD_SIZE[1] // 2 - 1))
+        self.put(Stone.create(Color.BLACK), (OTHELLO_BOARD_SIZE[0] // 2, OTHELLO_BOARD_SIZE[1] // 2 - 1))
+        self.put(Stone.create(Color.BLACK), (OTHELLO_BOARD_SIZE[0] // 2 - 1, OTHELLO_BOARD_SIZE[1] // 2))
+        self.put(Stone.create(Color.WHITE), (OTHELLO_BOARD_SIZE[0] // 2, OTHELLO_BOARD_SIZE[1] // 2))

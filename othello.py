@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 from enum import Enum
-from tkinter import Misc, Frame, Label, Canvas,Button
+from tkinter import Misc, Frame
 import tkinter
 from copy import copy
 from typing import Sequence
-from dataclasses import dataclass
-from PIL import Image, ImageTk
 
 from boardgame import Board, Tile, Coordinate
 from objects import Stone, PutableSpaceTile
@@ -98,10 +96,10 @@ class OthelloBoard(Board):
     def init_board(self):
         """石を初期配置するメソッド"""
         self.take_all_pieces()
-        self.put(Stone.create(Color.WHITE), (OTHELLO_BOARD_SIZE[0] // 2 - 1, OTHELLO_BOARD_SIZE[1] // 2 - 1))
-        self.put(Stone.create(Color.BLACK), (OTHELLO_BOARD_SIZE[0] // 2, OTHELLO_BOARD_SIZE[1] // 2 - 1))
-        self.put(Stone.create(Color.BLACK), (OTHELLO_BOARD_SIZE[0] // 2 - 1, OTHELLO_BOARD_SIZE[1] // 2))
-        self.put(Stone.create(Color.WHITE), (OTHELLO_BOARD_SIZE[0] // 2, OTHELLO_BOARD_SIZE[1] // 2))
+        self.put(Stone.create(Color.WHITE), (self.board_size[0] // 2 - 1, self.board_size[1] // 2 - 1))
+        self.put(Stone.create(Color.BLACK), (self.board_size[0] // 2, self.board_size[1] // 2 - 1))
+        self.put(Stone.create(Color.BLACK), (self.board_size[0] // 2 - 1, self.board_size[1] // 2))
+        self.put(Stone.create(Color.WHITE), (self.board_size[0] // 2, self.board_size[1] // 2))
 
 
 class OthelloGameManager(Frame):
@@ -111,7 +109,7 @@ class OthelloGameManager(Frame):
             self, 
             master: Misc,
             display_size: Coordinate | tuple[int, int],
-            grid_width: Coordinate | tuple[int, int],
+            grid_width: int,
             participants: Sequence[OthelloPlayer],
             **kwargs):
         
@@ -383,7 +381,7 @@ def main():
     )
     manager.grid(row=0, column=0, sticky="nsew")
 
-    home_display = HomeDisplay(root, manager, manager)
+    home_display = HomeDisplay(root)
     home_display.grid(row=0, column=0, sticky="nsew")
 
     home_display.tkraise()

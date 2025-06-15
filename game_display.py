@@ -10,6 +10,7 @@ from PIL import ImageTk, Image
 from boardgame import Coordinate
 from systems import Color, CONFIG, OthelloPlayer
 from text_object import AutoFontLabel
+from objects import OthelloBoard
 from display_items import SceneTransitionButton, Display
 
 
@@ -162,3 +163,29 @@ class ManagerDisplay(Frame):
         self.winner_label.destroy()
         self.home_button.destroy()
         self.new_game_button.destroy()
+
+
+class GameDisplay(Frame):
+
+    def __init__(self, master: Misc, grid_width: int):
+        master.update_idletasks()
+        self.display_size: Coordinate = Coordinate(master.winfo_width(), master.winfo_height())
+        super().__init__(
+            master,
+            width=self.display_size[0],
+            height=self.display_size[1],
+            name=Display.GAME,
+        )
+
+        self.othello_board: OthelloBoard = OthelloBoard(
+            self,
+            (self.display_size.y, self.display_size.y),
+            grid_width,
+        )
+
+        # redo関数はOthelloManagerが持つが、redoボタンはManagerDisplayが持つという矛盾
+        self.manager_display: ManagerDisplay = ManagerDisplay(
+            self,
+            self.display_size - (self.othello_board.x, 0),
+
+        )
