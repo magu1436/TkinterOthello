@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from enum import Enum
@@ -12,7 +11,7 @@ from PIL import Image, ImageTk
 from boardgame import Board, Tile, Coordinate
 from objects import Stone, PutableSpaceTile
 from systems import Color, OthelloPlayer, CONFIG
-from history import History
+from history import History, DBController
 from game_display import ManagerDisplay
 from home_display import HomeDisplay
 from history_display import HistoryDisplay
@@ -184,7 +183,7 @@ class OthelloGameManager(Frame):
     def can_flip_along_direction(
             self, 
             color: Color, 
-            coordinate: Coordinate | Sequence[int, int],
+            coordinate: Coordinate | Sequence[int],
             direction: Direction
             ) -> bool:
         """引数に受け取った方向について、ひっくり返すことができるかどうか判別して返す.
@@ -211,7 +210,7 @@ class OthelloGameManager(Frame):
             cursor += direction.value
         return False
     
-    def can_put_stone(self, color: Color, coordinate: Sequence[int, int]) -> bool:
+    def can_put_stone(self, color: Color, coordinate: Sequence[int]) -> bool:
         """ある座標に石を置くことができるかどうか判別するためのメソッド.
         
         Args:
@@ -349,6 +348,8 @@ class OthelloGameManager(Frame):
             winner_color = Color.WHITE
         winner = self.players[0] if self.players[0].color == winner_color else self.players[1]
         self.manager_display.indicate_victory_scene(winner)
+        self.history.is_finished = True
+        DBController.save(self.history)
     
     def redo(self):
         """一手戻る処理を行うメソッド."""
@@ -387,7 +388,7 @@ def main():
     history_display = HistoryDisplay(root)
     history_display.grid(row=0, column=0, sticky="nsew")
 
-    home_display = HomeDisplay(root, manager, manager)
+    home_display = HomeDisplay(root, manager, history_display)
     home_display.grid(row=0, column=0, sticky="nsew")
 
     home_display.tkraise()

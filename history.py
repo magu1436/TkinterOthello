@@ -34,7 +34,7 @@ class History(list):
         super().__init__()
 
         self.uuid = str(uuid4())
-        self.title = date.today()
+        self.title = date.today().strftime("%Y-%m/%d")
         self.is_finished = False
     
     def append(self, board: list[list[None | Stone]], turn_player: OthelloPlayer) -> None:
@@ -68,7 +68,7 @@ class DBController:
             cls.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS history_list(
                         uuid BINARY(16) PRIMARY KEY,
-                        title DATE,
+                        title CHAR(10),
                         is_finished BOOLEAN
                 )
             """)
@@ -84,7 +84,8 @@ class DBController:
                 )
             """)
 
-    def convert_board_to_list(cls, scene: Scene) -> list :
+    @staticmethod
+    def convert_board_to_list(scene: Scene) -> list :
         """Sceneオブジェクトからboardオブジェクトを取得し、listに変換するメソッド
 
         要素は、下記のように型変換を行う
@@ -123,7 +124,8 @@ class DBController:
 
         return board_data
     
-    def get_turn_player(cls, scene: Scene) -> str:
+    @staticmethod
+    def get_turn_player(scene: Scene) -> str:
         """Sceneオブジェクトからturn_playerを取得し、文字列として返すメソッド
 
         Args:
@@ -141,7 +143,8 @@ class DBController:
 
         return turn_player_str
     
-    def convert_to_json(cls, target:list) -> str:
+    @staticmethod
+    def convert_to_json(target:list) -> str:
          """リストをjson形式に変換するメソッド
          
         Args:
@@ -153,7 +156,8 @@ class DBController:
          """
          return json.dumps(target)
     
-    def convert_json_to_list(cls, target:str) -> list:
+    @staticmethod
+    def convert_json_to_list(target:str) -> list:
         """json形式のデータをlistに変換するメソッド
         
         Args:
@@ -164,7 +168,8 @@ class DBController:
         """
         return json.loads(target)
     
-    def convert_list_to_board(cls, target_list:list) -> list:
+    @staticmethod
+    def convert_list_to_board(target_list:list) -> list:
         """受け取ったlistをboardに変換するメソッド
         
         listの各要素は、下記のように型変換を行う
@@ -203,7 +208,8 @@ class DBController:
 
         return board
 
-    def convert_str_to_turnplayer(cls, target_str:str) -> OthelloPlayer:
+    @staticmethod
+    def convert_str_to_turnplayer(target_str:str) -> OthelloPlayer:
         """受け取ったstrをturn_playerとして返すメソッド
         """
         if target_str == "BLACK":
@@ -343,7 +349,7 @@ class DBController:
 
         # history_listテーブルから、全データのindexを取得
         cls.cursor.execute("""
-            SELECT uuid, title, is_finished FROM history_list
+            SELECT title, is_finished FROM history_list
         """)
 
         # SELECT文の結果を取得
