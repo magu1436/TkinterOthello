@@ -92,7 +92,7 @@ class HistoryControllFrame(Frame):
         self.history_list = history_list
         super().__init__(master)
 
-        restore_button = RestoreButton(self)
+        restore_button = RestoreButton(self, self.history_list)
         delete_button = DeleteButton(self, self.history_list)
 
         restore_button.pack(side=tk.LEFT)
@@ -102,7 +102,8 @@ class HistoryControllFrame(Frame):
 class RestoreButton(SceneTransitionButton):
     """restoreボタン"""
 
-    def __init__(self, master):
+    def __init__(self, master, history_list: HistoryList):
+        self.history_list = history_list
         super().__init__(master, RESTORE_HISTORY_BUTTON_TEXT, Display.GAME)
 
     def restore_history(self):
@@ -110,6 +111,14 @@ class RestoreButton(SceneTransitionButton):
         
         DBcontroller.restore()でデータベースから履歴を取得し、復元を行う
         """
+        # listboxで選択されているデータのindexを取得
+        list_index = self.history_list.get_listbox_index()
+
+        # indexを元に削除するデータのuuidを取得
+        uuid = self.history_list.uuid_list[list_index[0]]
+
+        # データベース上から対象となる履歴を削除
+        DBController.restore(uuid)
 
 
 class DeleteButton(Button):
@@ -133,4 +142,5 @@ class DeleteButton(Button):
         # データベース上から対象となる履歴を削除
         DBController.delete(uuid)
 
+        # listboxの更新
         self.history_list.update()

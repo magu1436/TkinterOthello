@@ -263,7 +263,7 @@ class DBController:
         cls.conn.commit()
 
     @classmethod
-    def restore(cls, uuid: str ) -> History:
+    def restore(cls, uuid: bytes) -> History:
         """データベースから履歴を復元するメソッド
         
         引数に復元したい履歴のUUIDを受け取り、それに対応したboardとturn_playerをscene_listテーブルから取得する。
@@ -281,13 +281,10 @@ class DBController:
         # Historyオブジェクトの作成
         history = History()
 
-        # 引数として受け取ったuuidをbytes型に変換
-        uuid_bytes = UUID(uuid).bytes
-
         # scene_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを取得
         cls.cursor.execute("""
             SELECT board_status, turn_player FROM scene_list WHERE history_id = %s
-        """, (uuid_bytes,))
+        """, (uuid,))
 
         rows: list[tuple] = cls.cursor.fetchall()
 
