@@ -308,7 +308,7 @@ class DBController:
         return history
 
     @classmethod
-    def delete(cls, uuid: str) -> None:
+    def delete(cls, uuid: bytes) -> None:
         """データベースから履歴を削除するメソッド
         
         引数に削除したい履歴のUUIDを受け取り、その履歴をデータベースから削除する
@@ -320,18 +320,15 @@ class DBController:
         # データベースへの接続確認
         cls.initialize()
 
-        # 引数として受け取ったuuidをbytes型に変換
-        uuid_bytes = UUID(uuid).bytes
-
         # scene_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを削除
         cls.cursor.execute("""
             DELETE FROM scene_list WHERE history_id = %s
-        """, (uuid_bytes,))
+        """, (uuid,))
 
         # history_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを削除
         cls.cursor.execute("""
             DELETE FROM history_list WHERE uuid = %s
-        """, (uuid_bytes,))
+        """, (uuid,))
 
         # データベースの変更を確定
         cls.conn.commit()
@@ -349,7 +346,7 @@ class DBController:
 
         # history_listテーブルから、全データのindexを取得
         cls.cursor.execute("""
-            SELECT title, is_finished FROM history_list
+            SELECT uuid, title, is_finished FROM history_list
         """)
 
         # SELECT文の結果を取得

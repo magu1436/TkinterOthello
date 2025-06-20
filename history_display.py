@@ -26,7 +26,7 @@ class HistoryDisplay(Frame):
         self.history_list = HistoryList(self)
 
         # restoreボタンとdeleteボタンの作成
-        self.history_controll_frame = HistoryControllFrame(self)
+        self.history_controll_frame = HistoryControllFrame(self, self.history_list)
 
         # ウィジェットの配置
         self.home_display_button.pack()
@@ -38,6 +38,7 @@ class HistoryList(Listbox):
     """履歴を表示するリストボックス"""
 
     selected = None
+    uuid_list = []
     
     def __init__(self, master):
         super().__init__(master, width=50, height=30, justify=tk.CENTER)
@@ -52,7 +53,10 @@ class HistoryList(Listbox):
         all_index = DBController.get_all_indexes()
 
         # indexデータからtitleとis_finishedを抜き出す
-        for title, is_finished in all_index:
+        for uuid, title, is_finished in all_index:
+
+            # uuidはuuid_listに保存
+            self.uuid_list.append(uuid)
 
             # is_finishedが1のとき、"済"と表示する
             if is_finished:
@@ -65,7 +69,12 @@ class HistoryList(Listbox):
             index_str = f"{title} {is_finished_str}"
 
             # 文字列の追加
-            self.insert(0, index_str)
+            self.insert(tk.END, index_str)     
+
+    def get_listbox_index(self) -> tuple:
+        """listboxで選択中のデータのindexを取得するメソッド
+        """
+        return self.curselection()
 
     def update(self):
         """listboxの表示を更新するメソッド
@@ -79,11 +88,12 @@ class HistoryList(Listbox):
 class HistoryControllFrame(Frame):
     """restoreボタンとdeleteボタンをもつFrame"""
 
-    def __init__(self, master):
+    def __init__(self, master, history_list: HistoryList):
+        self.history_list = history_list
         super().__init__(master)
 
         restore_button = RestoreButton(self)
-        delete_button = DeleteButton(self)
+        delete_button = DeleteButton(self, self.history_list)
 
         restore_button.pack(side=tk.LEFT)
         delete_button.pack(side=tk.RIGHT)
@@ -105,7 +115,8 @@ class RestoreButton(SceneTransitionButton):
 class DeleteButton(Button):
     """deleteボタン"""
 
-    def __init__(self, master):
+    def __init__(self, master, history_list: HistoryList):
+        self.history_list = history_list
         super().__init__(master, text=DELETE_HISTORY_BUTTON_TEXT, command=self.delete_history)
 
     def delete_history(self):
@@ -113,3 +124,13 @@ class DeleteButton(Button):
         
         DBcontroller.delete()でデータベースから履歴の削除を行う
         """
+        # listboxで選択されているデータのindexを取得
+        list_index = self.history_list.get_listbox_index()
+
+        # indexを元に削除するデータのuuidを取得
+        uuid = self.history_list.uuid_list[list_index[0]]
+
+        # データベース上から対象となる履歴を削除
+        DBController.delete(uuid)
+
+        self.history_list.update()
