@@ -12,12 +12,20 @@ from systems import Color, CONFIG, OthelloPlayer
 from text_object import AutoFontLabel
 from objects import OthelloBoard
 from display_items import SceneTransitionButton, Display
+from errors import TkinterOthelloException
 
 
 TURN_PLAYER_NAME_FONT_SIZE = 50
 STONE_COUNT_FONT_SIZE: int = 50
 
 REDO_BUTTON_TEXT = "待った！！"
+
+
+class NotSetRedoCommandError(TkinterOthelloException):
+    """set_redo_commandメソッドなしにredoボタンが押されたときに生じる"""
+
+    def __str__(self):
+        return "Redoコマンドが未設定です. 先にset_redo_commandメソッドを実行してください."
 
 
 class CounterDisplay(Frame):
@@ -83,7 +91,13 @@ class ManagerDisplay(Frame):
     """ゲーム画面の右側に表示するディスプレイ
     
     ターンプレイヤーの表示や現在の石の数を表示する.
-    試合の決着時、画面遷移のボタンや新しいゲームを始めるボタンを追加する."""
+    試合の決着時、画面遷移のボタンや新しいゲームを始めるボタンを追加する.
+    
+    Args:
+        master(Misc): マスター
+        display_size(Sequence[int]): 画面上で表示される際の表示サイズ
+        redo_command(Callable([[], None])): 待ったボタンで実行される処理
+        game_reset_func(Callable[[], None]): game_resetメソッドが呼ばれたときに実行される処理"""
     
     def __init__(
             self,
@@ -183,9 +197,9 @@ class GameDisplay(Frame):
             grid_width,
         )
 
-        # redo関数はOthelloManagerが持つが、redoボタンはManagerDisplayが持つという矛盾
+        # マネージャーからこのディスプレイに介入したいのに、redoコマンドはマネージャーが持つという矛盾
         self.manager_display: ManagerDisplay = ManagerDisplay(
             self,
             self.display_size - (self.othello_board.x, 0),
-
+            self.__redo_command,
         )
