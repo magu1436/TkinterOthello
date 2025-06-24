@@ -42,7 +42,7 @@ class PutableSpaceTile(Tile):
         )
     
     def execute_put_stone(self, event: BGEvent):
-        manager = event.board.master
+        manager = event.board.master.manager
         stone = Stone(manager.turn_player.color)
         manager.put_stone(stone, event.coordinate)
 
