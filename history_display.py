@@ -117,8 +117,8 @@ class RestoreButton(SceneTransitionButton):
         # indexを元に削除するデータのuuidを取得
         uuid = self.history_list.uuid_list[list_index[0]]
 
-        # データベース上から対象となる履歴を削除
-        DBController.restore(uuid)
+        # データベース上から対象となる履歴を取得
+        history = DBController.restore(uuid)
 
 
 class DeleteButton(Button):
