@@ -10,7 +10,7 @@ from tkinter.ttk import Button
 from boardgame import Coordinate, BoardGamePhotoImage
 
 from objects import OthelloBoard, Stone, PutableSpaceTile
-from history import History
+from history import History, Scene
 from systems import OthelloPlayer, Color, CONFIG
 from errors import TkinterOthelloException
 from text_object import AutoFontLabel
@@ -18,6 +18,10 @@ from display_items import SceneTransitionButton, Display
 
 
 REDO_BUTTON_TEXT = "待った！！"
+
+SM_UNDO_BUTTON_TEXT = "一手戻す"
+SM_REDO_BUTTON_TEXT = "一手進める"
+SM_HOME_BUTTON_TEXT = "ホームに戻る"
 
 
 class InvalidStonePlacementError(TkinterOthelloException):
@@ -29,7 +33,7 @@ class InvalidStonePlacementError(TkinterOthelloException):
         stone: Stone = self.args[0]
         return f"Invalid stone placed at {stone.coordinate}: color {stone.color}"
 
-class NotExistsManagerDisplay(TkinterOthelloException):
+class NotExistsManagerDisplayError(TkinterOthelloException):
     """create_manager_displayメソッドを呼ばれる前にmanager_displayを参照しようとしたときに生じる"""
     def __str__(self):
         return "No 'ManagerDisplay' objects is created. Use create_manager_display method firstly."
@@ -62,7 +66,7 @@ class GameManager:
     @property
     def manager_display(self) -> ManagerDisplay:
         if self.__manager_display is None:
-            raise NotExistsManagerDisplay()
+            raise NotExistsManagerDisplayError()
         return self.__manager_display
 
     def create_manager_display(
@@ -453,3 +457,173 @@ class ManagerDisplay(Frame):
         self.winner_label.destroy()
         self.home_button.destroy()
         self.new_game_button.destroy()
+
+
+class SpectatingManager:
+    """観戦モードの進行を担うクラス
+    
+    Attributes:
+        othello_board(OthelloBoard): 管理するオセロボード
+        history(History | None): 管理するゲームの履歴
+        turn_index(int): 現在描画しているターンの番号
+        turn_player(OthelloPlayer | None): 現在のターンプレイヤー"""
+
+    def __init__(
+            self,
+            othello_board: OthelloBoard,
+    ):
+        self.othello_board = othello_board
+        self.__manager_display: SpectatingManagerDisplay | None = None
+        self.history: History | None = None
+        self.turn_index: int = 0
+        self.turn_player: OthelloPlayer | None = None
+    
+    @property
+    def manager_display(self) -> SpectatingManager:
+        """`manager_display` のゲッター
+        
+        `create_manager_display` メソッドが呼ばれる前に参照された時、エラーを生じる
+        
+        Returns:
+            NotExistsManagerDisplayError: サブディスプレイが生成される前に参照されたとき生じる"""
+        if self.__manager_display is None:
+            raise NotExistsManagerDisplayError()
+        return self.__manager_display
+    
+    def create_manager_display(
+            self,
+            master: Misc,
+            display_size: tuple[int, int] | Coordinate
+    ) -> SpectatingManagerDisplay:
+        """サブディスプレイを生成して返すメソッド
+        
+        自身に記録処理も同時に行う
+        
+        Args:
+            master(Misc): マスター
+            display_size(tuple[int, int] | Coordinate): サブディスプレイの大きさ"""
+        self.__manager_display = SpectatingManagerDisplay(
+            master,
+            display_size,
+            self.undo,
+            self.redo,
+            self.reset,
+        )
+        return self.__manager_display
+
+    def create_game(self, history: History) -> None:
+        """観戦ゲームを作成するメソッド
+        
+        Args:
+            history(History): 観戦したいゲームの履歴"""
+        self.history = history
+        self.restore_scene(self.turn_index)
+    
+    def restore_scene(self, turn_index: int) -> None:
+        """指定ターンの `Scene` を復元して、盤面とサブディスプレイを更新するメソッド
+        
+        Args:
+            turn_index(int): 反映するターンの番号"""
+        scene: Scene = self.history[turn_index]
+        black_stone_count = 0
+        white_stone_count = 0
+        for row in scene.board:
+            for stone in row:
+                if stone is not None:
+                    self.othello_board.put(stone, stone.coordinate)
+                    match stone.color:
+                        case Color.BLACK: black_stone_count += 1
+                        case Color.WHITE: white_stone_count += 1
+        self.turn_player = scene.turn_player
+        self.__manager_display.update_display(
+            self.turn_player.name,
+            black_stone_count,
+            white_stone_count,
+        )
+        
+    def undo(self):
+        """一手戻すメソッド"""
+        if self.turn_index > 0:
+            self.turn_index -= 1
+            self.restore_scene(self.turn_index)
+
+    def redo(self):
+        """一手進めるメソッド"""
+        if self.turn_index < len(self.history):
+            self.turn_index += 1
+            self.restore_scene(self.turn_index)
+
+    def reset(self):
+        """観戦状態をリセットするメソッド"""
+        self.othello_board.take_all_pieces
+        self.turn_index = 0
+        self.turn_player = 0
+        self.history = None
+
+
+class SpectatingManagerDisplay(Frame):
+    
+    def __init__(
+            self,
+            master: Misc,
+            display_size: tuple[int, int],
+            undo_command: Callable[[], None],
+            redo_command: Callable[[], None],
+            reset_func: Callable[[], None],
+    ):
+        super().__init__(
+            master,
+            width=display_size[0],
+            height=display_size[1]
+        )
+        self.display_size = Coordinate(display_size)
+        self.turn_player_display = TurnPlayerDisplay(self, display_size[0])
+        self.black_stone_counter = CounterDisplay(
+            self,
+            Color.BLACK,
+            self.display_size.x // 2
+        )
+        self.white_stone_counter = CounterDisplay(
+            self,
+            Color.WHITE,
+            self.display_size.x // 2,
+        )
+        self.undo_button = Button(
+            self,
+            text=SM_UNDO_BUTTON_TEXT,
+            command=undo_command,
+        )
+        self.redo_button = Button(
+            self,
+            text=SM_REDO_BUTTON_TEXT,
+            command=redo_command,
+        )
+        self.home_button = SceneTransitionButton(
+            self,
+            SM_HOME_BUTTON_TEXT,
+            Display.HOME,
+            reset_func,
+        )
+
+        # 配置
+        self.turn_player_display.grid(row=0, column=0, columnspan=2, sticky=tkinter.W+tkinter.E)
+        self.black_stone_counter.grid(row=1, column=0, sticky=tkinter.W+tkinter.E)
+        self.white_stone_counter.grid(row=1, column=1, sticky=tkinter.W+tkinter.E)
+        self.redo_button.grid(row=2, column=0, sticky="we")
+        self.undo_button.grid(row=2, column=1, sticky="we")
+        self.home_button.grid(
+            row=3,
+            column=0,
+            columnspan=2,
+            sticky="we"
+        )
+
+    def update_display(
+            self,
+            player_name: str,
+            black_stone_count: int,
+            white_stone_count: int,
+    ):
+        self.turn_player_display.update_player_name(player_name)
+        self.black_stone_counter.update_counter(black_stone_count)
+        self.white_stone_counter.update_counter(white_stone_count)
