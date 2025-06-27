@@ -21,7 +21,7 @@ class SceneTransitionButton(Button):
             master: Misc, 
             text: str, 
             trans_to: Display, 
-            another_command: Callable | None = None,
+            another_command: Callable[[], None] | None = None,
             state: Literal["normal", "disable"] = "normal"
         ):
         """画面遷移を行うボタン
@@ -30,7 +30,7 @@ class SceneTransitionButton(Button):
             master(Mist): マスター
             text(str): ボタンの文字列
             trans_to(Display): 遷移先の画面
-            another_command(Callable | None, optional): 遷移以外に行う処理. default to None.
+            another_command(Callable[[], None] | None, optional): 遷移以外に行う処理. default to None.
             state(Literal["normal", "disable"], optional): ボタンの状態. 押下可能かどうか. default to "normal".
         """
         super().__init__(master, text=text, command=self.trans_display, state=state)
