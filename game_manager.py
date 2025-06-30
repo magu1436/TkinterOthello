@@ -22,6 +22,7 @@ REDO_BUTTON_TEXT = "待った！！"
 TIME_CUT_IN = 2
 PASS_CUT_IN_IMAGE_RATIO_TO_DISPLAY: float = .6
 PASS_CUT_IN_IMAGE_PATH = CONFIG["PASS_CUT_IN_PATH"]
+CUT_IN_BG_IMAGE_PATH = CONFIG["PASS_CUT_IN_BG"]
 TIME_RAITIO_STOPPING_CUT_IN_ON_CENTER = .5
 FPS = 30
 
@@ -245,6 +246,7 @@ class GameManager:
             return
         
         if len(putable_tiles_list) == 0:
+            self.pass_with_cut_in()
             self.turn_player.can_put = False
             self.change_turn()
         else:
@@ -252,22 +254,52 @@ class GameManager:
     
     def pass_with_cut_in(self):
         """パスのカットイン演出を実行するメソッド"""
-        cut_in_image = BoardGamePhotoImage(PASS_CUT_IN_IMAGE_PATH)
-        img_ratio = (self.othello_board.board_display_size.x + self.__manager_display.display_size.x) * PASS_CUT_IN_IMAGE_RATIO_TO_DISPLAY / cut_in_image.width()
-        cut_in_image.resize((int(cut_in_image.width() * img_ratio), (int(cut_in_image.height() * img_ratio))))
-        stoppping_time = TIME_CUT_IN * TIME_RAITIO_STOPPING_CUT_IN_ON_CENTER
-        moving_time = (TIME_CUT_IN - stoppping_time) // 2
-
         display_size = self.othello_board.board_display_size + self.manager_display.display_size
-        canvas = Canvas(width=display_size.x, height=display_size.y)
-        canvas.create_image(
-            display_size.x,
-            display_size.y // 2,
-            image=cut_in_image
+        cut_in_image = BoardGamePhotoImage(PASS_CUT_IN_IMAGE_PATH)
+        img_ratio = display_size.x * PASS_CUT_IN_IMAGE_RATIO_TO_DISPLAY / cut_in_image.width()
+        cut_in_image.resize((int(cut_in_image.width() * img_ratio), (int(cut_in_image.height() * img_ratio))))
+        cut_in_bg_image = BoardGamePhotoImage(
+            CUT_IN_BG_IMAGE_PATH,
+            (display_size.x, cut_in_image.height())
         )
 
-        # TODO: ここから実際に動かす処理を実装
+        
+        stoppping_time = TIME_CUT_IN * TIME_RAITIO_STOPPING_CUT_IN_ON_CENTER
+        moving_time = (TIME_CUT_IN - stoppping_time) / 2
 
+        canvas = Canvas(
+            master=self.manager_display.winfo_toplevel(),
+            width=display_size.x, 
+            height=cut_in_image.height(), 
+            bd=0,
+            highlightthickness=0
+        )
+        canvas.create_image(
+            cut_in_bg_image.width() // 2,
+            cut_in_bg_image.height() // 2,
+            image=cut_in_bg_image
+        )
+        cut_in = canvas.create_image(
+            display_size.x,
+            cut_in_image.height() // 2,
+            image=cut_in_image
+        )
+        canvas.place(x=display_size.x//2, y=display_size.y//2, anchor="center")
+
+        frame_amount = moving_time * FPS
+        dt = moving_time / frame_amount
+        dx = display_size.x // frame_amount
+
+        # TODO: ここから実際に動かす処理を実装
+        def move():
+            for _ in range(int(frame_amount // 2)):
+                canvas.move(cut_in, -dx, 0)
+                canvas.master.update()
+                time.sleep(dt)
+        move()
+        time.sleep(stoppping_time)
+        move()
+        canvas.destroy()
 
 
     
