@@ -6,6 +6,7 @@ from typing import Callable
 import tkinter
 from tkinter import Frame, Misc, Canvas
 from tkinter.ttk import Button
+import time
 
 from boardgame import Coordinate, BoardGamePhotoImage
 
@@ -18,6 +19,11 @@ from display_items import SceneTransitionButton, Display
 
 
 REDO_BUTTON_TEXT = "待った！！"
+TIME_CUT_IN = 2
+PASS_CUT_IN_IMAGE_RATIO_TO_DISPLAY: float = .6
+PASS_CUT_IN_IMAGE_PATH = CONFIG["PASS_CUT_IN_PATH"]
+TIME_RAITIO_STOPPING_CUT_IN_ON_CENTER = .5
+FPS = 30
 
 
 class InvalidStonePlacementError(TkinterOthelloException):
@@ -243,6 +249,27 @@ class GameManager:
             self.change_turn()
         else:
             self.turn_player.can_put = True
+    
+    def pass_with_cut_in(self):
+        """パスのカットイン演出を実行するメソッド"""
+        cut_in_image = BoardGamePhotoImage(PASS_CUT_IN_IMAGE_PATH)
+        img_ratio = (self.othello_board.board_display_size.x + self.__manager_display.display_size.x) * PASS_CUT_IN_IMAGE_RATIO_TO_DISPLAY / cut_in_image.width()
+        cut_in_image.resize((int(cut_in_image.width() * img_ratio), (int(cut_in_image.height() * img_ratio))))
+        stoppping_time = TIME_CUT_IN * TIME_RAITIO_STOPPING_CUT_IN_ON_CENTER
+        moving_time = (TIME_CUT_IN - stoppping_time) // 2
+
+        display_size = self.othello_board.board_display_size + self.manager_display.display_size
+        canvas = Canvas(width=display_size.x, height=display_size.y)
+        canvas.create_image(
+            display_size.x,
+            display_size.y // 2,
+            image=cut_in_image
+        )
+
+        # TODO: ここから実際に動かす処理を実装
+
+
+
     
     def set_putable_tiles(self, color: Color) -> tuple[PutableSpaceTile]:
         """置けるところを示すためのタイルを設置するメソッド
