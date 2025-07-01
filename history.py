@@ -34,7 +34,7 @@ class History(list):
         super().__init__()
 
         self.uuid = str(uuid4())
-        self.title = date.today()
+        self.title = date.today().strftime("%Y-%m/%d")
         self.is_finished = False
     
     def append(self, board: list[list[None | Stone]], turn_player: OthelloPlayer) -> None:
@@ -68,7 +68,7 @@ class DBController:
             cls.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS history_list(
                         uuid BINARY(16) PRIMARY KEY,
-                        title DATE,
+                        title CHAR(10),
                         is_finished BOOLEAN
                 )
             """)
@@ -84,7 +84,8 @@ class DBController:
                 )
             """)
 
-    def convert_board_to_list(cls, scene: Scene) -> list :
+    @staticmethod
+    def convert_board_to_list(scene: Scene) -> list :
         """Sceneオブジェクトからboardオブジェクトを取得し、listに変換するメソッド
 
         要素は、下記のように型変換を行う
@@ -123,7 +124,8 @@ class DBController:
 
         return board_data
     
-    def get_turn_player(cls, scene: Scene) -> str:
+    @staticmethod
+    def get_turn_player(scene: Scene) -> str:
         """Sceneオブジェクトからturn_playerを取得し、文字列として返すメソッド
 
         Args:
@@ -141,7 +143,8 @@ class DBController:
 
         return turn_player_str
     
-    def convert_to_json(cls, target:list) -> str:
+    @staticmethod
+    def convert_to_json(target:list) -> str:
          """リストをjson形式に変換するメソッド
          
         Args:
@@ -153,7 +156,8 @@ class DBController:
          """
          return json.dumps(target)
     
-    def convert_json_to_list(cls, target:str) -> list:
+    @staticmethod
+    def convert_json_to_list(target:str) -> list:
         """json形式のデータをlistに変換するメソッド
         
         Args:
@@ -164,7 +168,8 @@ class DBController:
         """
         return json.loads(target)
     
-    def convert_list_to_board(cls, target_list:list) -> list:
+    @staticmethod
+    def convert_list_to_board(target_list:list) -> list:
         """受け取ったlistをboardに変換するメソッド
         
         listの各要素は、下記のように型変換を行う
@@ -203,7 +208,8 @@ class DBController:
 
         return board
 
-    def convert_str_to_turnplayer(cls, target_str:str) -> OthelloPlayer:
+    @staticmethod
+    def convert_str_to_turnplayer(target_str:str) -> OthelloPlayer:
         """受け取ったstrをturn_playerとして返すメソッド
         """
         if target_str == "BLACK":
@@ -257,7 +263,7 @@ class DBController:
         cls.conn.commit()
 
     @classmethod
-    def restore(cls, uuid: str ) -> History:
+    def restore(cls, uuid: bytes) -> History:
         """データベースから履歴を復元するメソッド
         
         引数に復元したい履歴のUUIDを受け取り、それに対応したboardとturn_playerをscene_listテーブルから取得する。
@@ -275,13 +281,10 @@ class DBController:
         # Historyオブジェクトの作成
         history = History()
 
-        # 引数として受け取ったuuidをbytes型に変換
-        uuid_bytes = UUID(uuid).bytes
-
         # scene_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを取得
         cls.cursor.execute("""
             SELECT board_status, turn_player FROM scene_list WHERE history_id = %s
-        """, (uuid_bytes,))
+        """, (uuid,))
 
         rows: list[tuple] = cls.cursor.fetchall()
 
@@ -302,7 +305,7 @@ class DBController:
         return history
 
     @classmethod
-    def delete(cls, uuid: str) -> None:
+    def delete(cls, uuid: bytes) -> None:
         """データベースから履歴を削除するメソッド
         
         引数に削除したい履歴のUUIDを受け取り、その履歴をデータベースから削除する
@@ -314,48 +317,37 @@ class DBController:
         # データベースへの接続確認
         cls.initialize()
 
-        # 引数として受け取ったuuidをbytes型に変換
-        uuid_bytes = UUID(uuid).bytes
-
         # scene_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを削除
         cls.cursor.execute("""
             DELETE FROM scene_list WHERE history_id = %s
-        """, (uuid_bytes,))
+        """, (uuid,))
 
         # history_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを削除
         cls.cursor.execute("""
             DELETE FROM history_list WHERE uuid = %s
-        """, (uuid_bytes,))
+        """, (uuid,))
 
         # データベースの変更を確定
         cls.conn.commit()
 
     @classmethod
-    def get_all_indexes(cls, uuid:str) -> Index:
+    def get_all_indexes(cls) -> list[tuple]:
         """データベースから履歴のインデックスを取得するメソッド
-        
-        Args:
-            uuid(str): 取得したいインデックスに割り当てられているid
 
         Returns:
-            Index: history_viewで表示するデータ
+            list[taple]: history_viewで表示する全データのindex(uuid, title, is_finished)
 
         """
         # データベースへの接続確認
         cls.initialize()
 
-        # 引数として受け取ったuuidをbytes型に変換
-        uuid_bytes = UUID(uuid).bytes
-
-        # history_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを取得
+        # history_listテーブルから、全データのindexを取得
         cls.cursor.execute("""
-            SELECT uuid, title, is_finished FROM history_list WHERE uuid = %s
-        """, (uuid_bytes,))
+            SELECT uuid, title, is_finished FROM history_list
+        """)
 
         # SELECT文の結果を取得
-        row:tuple = cls.cursor.fetchone()
+        row:list[tuple] = cls.cursor.fetchall()
 
-        # 取得したデータからIndexオブジェクトを作成
-        index = Index(*row)
-
-        return index
+        # 取得したデータを戻り値として返す
+        return row

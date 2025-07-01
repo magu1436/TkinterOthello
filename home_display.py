@@ -6,6 +6,7 @@ from tkinter.ttk import Button
 from systems import CONFIG
 from boardgame.imagetools import BoardGamePhotoImage
 from display_items import SceneTransitionButton, Display
+from history_display import HistoryDisplay
 
 
 TITLE_LOGO_PADDING_RATIO_TO_DISPLAY = (.6, .2)
@@ -15,7 +16,7 @@ HISTORY_DISPLAY_BUTTON_TEXT = "履歴一覧"
 
 class HomeDisplay(Frame):
 
-    def __init__(self, master: Misc):
+    def __init__(self, master: Misc, game_display: Frame, history_display: HistoryDisplay):
         master.update_idletasks()
         display_size = (master.winfo_width(), master.winfo_height())
         super().__init__(master, width=display_size[0], height=display_size[1], name=Display.HOME.value)
@@ -58,7 +59,7 @@ class HomeDisplay(Frame):
             self,
             HISTORY_DISPLAY_BUTTON_TEXT,
             Display.HISTORY,
-            state="disable"
+            history_display.history_list.update
         )
         button_space_size = (
             self.__title_logo_image.width(),

@@ -10,7 +10,7 @@ from tkinter.ttk import Button
 from boardgame import Coordinate, BoardGamePhotoImage
 
 from objects import OthelloBoard, Stone, PutableSpaceTile
-from history import History
+from history import History, DBController
 from systems import OthelloPlayer, Color, CONFIG
 from errors import TkinterOthelloException
 from text_object import AutoFontLabel
@@ -18,6 +18,7 @@ from display_items import SceneTransitionButton, Display
 
 
 REDO_BUTTON_TEXT = "待った！！"
+SAVE_BUTTON_TEXT = "途中保存"
 
 
 class InvalidStonePlacementError(TkinterOthelloException):
@@ -75,6 +76,7 @@ class GameManager:
             display_size,
             self.redo,
             self.start_new_game,
+            self
         )
         self.__manager_display = manager_display
         return self.__manager_display
@@ -290,6 +292,8 @@ class GameManager:
             winner_color = Color.WHITE
         winner = self.players[0] if self.players[0].color == winner_color else self.players[1]
         self.manager_display.indicate_victory_scene(winner)
+        self.history.is_finished = True
+        DBController.save(self.history)
     
     def redo(self):
         """一手戻る処理を行うメソッド."""
@@ -302,6 +306,10 @@ class GameManager:
             for y in range(self.othello_board.board_size.y):
                 self.othello_board.put(board[y][x], (x, y))
         self.change_turn()
+
+    def save_progress(self):
+        """ゲームの途中経過を保存するメソッド"""
+        DBController.save(self.history)
 
 
 class CounterDisplay(Frame):
@@ -363,6 +371,13 @@ class TurnPlayerDisplay(AutoFontLabel):
         self.set_text(self.__create_display_label(player_name))
 
 
+class SaveButton(SceneTransitionButton):
+    """対戦を中断し、途中経過を保存するボタン"""
+
+    def __init__(self, master, game_manager: GameManager):
+        super().__init__(master, SAVE_BUTTON_TEXT, Display.HOME, game_manager.save_progress)
+
+
 class ManagerDisplay(Frame):
     """ゲーム画面の右側に表示するディスプレイ
     
@@ -380,7 +395,8 @@ class ManagerDisplay(Frame):
             master: Misc,
             display_size: tuple[int],
             redo_command: Callable[[], None],
-            game_reset_func: Callable[[], None]
+            game_reset_func: Callable[[], None],
+            game_manager: GameManager
     ):
         super().__init__(
             master,
@@ -392,6 +408,7 @@ class ManagerDisplay(Frame):
         self.black_stone_counter = CounterDisplay(self, Color.BLACK, self.display_size.x // 2)
         self.white_stone_counter = CounterDisplay(self, Color.WHITE, self.display_size.x // 2)
         self.redo_button = Button(self, text=REDO_BUTTON_TEXT, command=redo_command)
+        self.save_button = SaveButton(self, game_manager)
 
         self.game_reset_func: Callable = game_reset_func
 
@@ -400,6 +417,7 @@ class ManagerDisplay(Frame):
         self.black_stone_counter.grid(row=1, column=0, sticky=tkinter.W+tkinter.E)
         self.white_stone_counter.grid(row=1, column=1, sticky=tkinter.W+tkinter.E)
         self.redo_button.grid(row=2, column=0, columnspan=2, sticky=tkinter.W+tkinter.E)
+        self.save_button.grid(row=3, column=0, columnspan=2, sticky=tkinter.W+tkinter.E)
 
     def update_display(
             self,
