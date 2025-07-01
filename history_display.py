@@ -2,7 +2,7 @@ from tkinter import Frame, Label, Listbox, Button
 import tkinter as tk
 
 from display_items import SceneTransitionButton, Display
-from history import DBController
+from history import DBController, History
 
 HOME_DISPLAY_BUTTON_TEXT = "ホームへ"
 RESTORE_HISTORY_BUTTON_TEXT = "復元"
@@ -71,10 +71,10 @@ class HistoryList(Listbox):
             # 文字列の追加
             self.insert(tk.END, index_str)     
 
-    def get_listbox_index(self) -> tuple:
+    def get_listbox_index(self) -> int:
         """listboxで選択中のデータのindexを取得するメソッド
         """
-        return self.curselection()
+        return self.curselection()[0]
 
     def update(self):
         """listboxの表示を更新するメソッド
@@ -104,21 +104,28 @@ class RestoreButton(SceneTransitionButton):
 
     def __init__(self, master, history_list: HistoryList):
         self.history_list = history_list
-        super().__init__(master, RESTORE_HISTORY_BUTTON_TEXT, Display.GAME)
+        super().__init__(master, RESTORE_HISTORY_BUTTON_TEXT, Display.SPECTATOR)
+        self["command"] = self.trans_display
 
-    def restore_history(self):
+    def restore_selected_history(self) -> History:
         """履歴の復元を行うメソッド
         
         DBcontroller.restore()でデータベースから履歴を取得し、復元を行う
         """
-        # listboxで選択されているデータのindexを取得
-        list_index = self.history_list.get_listbox_index()
 
         # indexを元に削除するデータのuuidを取得
-        uuid = self.history_list.uuid_list[list_index[0]]
+        uuid = self.history_list.uuid_list[self.history_list.get_listbox_index()]
 
         # データベース上から対象となる履歴を取得
-        history = DBController.restore(uuid)
+        return DBController.restore(uuid)
+    
+    def trans_display(self):
+        is_finished = self.restore_selected_history().is_finished
+        if is_finished:
+            self.trans_to = Display.SPECTATOR
+        else:
+            self.trans_to = Display.GAME
+        super().trans_display()
 
 
 class DeleteButton(Button):
