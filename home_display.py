@@ -15,7 +15,7 @@ HISTORY_DISPLAY_BUTTON_TEXT = "履歴一覧"
 
 class HomeDisplay(Frame):
 
-    def __init__(self, master: Misc, game_display: Frame, history_display: Frame):
+    def __init__(self, master: Misc):
         master.update_idletasks()
         display_size = (master.winfo_width(), master.winfo_height())
         super().__init__(master, width=display_size[0], height=display_size[1], name=Display.HOME.value)
@@ -57,7 +57,8 @@ class HomeDisplay(Frame):
         self.history_display_button = SceneTransitionButton(
             self,
             HISTORY_DISPLAY_BUTTON_TEXT,
-            Display.HISTORY
+            Display.HISTORY,
+            state="disable"
         )
         button_space_size = (
             self.__title_logo_image.width(),
