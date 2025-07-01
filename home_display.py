@@ -59,7 +59,7 @@ class HomeDisplay(Frame):
             self,
             HISTORY_DISPLAY_BUTTON_TEXT,
             Display.HISTORY,
-            history_display.history_list.update()
+            history_display.history_list.update
         )
         button_space_size = (
             self.__title_logo_image.width(),

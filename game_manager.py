@@ -375,7 +375,7 @@ class SaveButton(SceneTransitionButton):
     """対戦を中断し、途中経過を保存するボタン"""
 
     def __init__(self, master, game_manager: GameManager):
-        super().__init__(master, SAVE_BUTTON_TEXT, Display.HOME, game_manager.save_progress())
+        super().__init__(master, SAVE_BUTTON_TEXT, Display.HOME, game_manager.save_progress)
 
 
 class ManagerDisplay(Frame):
