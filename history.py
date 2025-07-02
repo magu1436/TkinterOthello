@@ -9,6 +9,10 @@ from objects import Stone
 from systems import *
 
 
+INDEX_LIST_TABLE_NAME = "index_list"
+SCENE_LIST_TABLE_NAME = "scene_list"
+
+
 @dataclass
 class Scene:
     """一場面を保持するデータクラス"""
@@ -16,19 +20,15 @@ class Scene:
     turn_player: OthelloPlayer
 
 
-@dataclass
-class Index:
-    """history_viewで表示するデータ(インデックス)を保持するデータクラス"""
-    uuid: str
-    title: date
-    is_finished: bool
-    
 
 class History(list):
     """履歴を表すクラス
     
     リストを継承したコレクションクラスであり, 保持する要素は全て `Scene` クラスの
     インスタンスである.
+
+    Attribute:
+        uuid(str): 
     """
     def __init__(self):
         super().__init__()
@@ -65,8 +65,8 @@ class DBController:
             cls.cursor = cls.conn.cursor()
 
             # 履歴の一覧を保存するテーブル
-            cls.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS history_list(
+            cls.cursor.execute(f"""
+                CREATE TABLE IF NOT EXISTS {INDEX_LIST_TABLE_NAME}(
                         uuid BINARY(16) PRIMARY KEY,
                         title CHAR(10),
                         is_finished BOOLEAN
@@ -74,13 +74,13 @@ class DBController:
             """)
 
             # ターンごとの盤面状態を保存するテーブル(history_listテーブルと関連付け)
-            cls.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS scene_list(
+            cls.cursor.execute(f"""
+                CREATE TABLE IF NOT EXISTS {SCENE_LIST_TABLE_NAME}(
                         id INT PRIMARY KEY AUTO_INCREMENT,
                         history_id BINARY(16),
                         board_status JSON,
                         turn_player CHAR(5),
-                        FOREIGN KEY (history_id) REFERENCES history_list(uuid)
+                        FOREIGN KEY (history_id) REFERENCES {INDEX_LIST_TABLE_NAME}(uuid)
                 )
             """)
 
@@ -238,8 +238,8 @@ class DBController:
         uuid_bytes = UUID(uuid_str).bytes
 
         # history_listテーブルにデータを追加
-        cls.cursor.execute("""
-            INSERT INTO history_list (uuid, title, is_finished) VALUES (%s, %s, %s)
+        cls.cursor.execute(f"""
+            INSERT INTO {INDEX_LIST_TABLE_NAME} (uuid, title, is_finished) VALUES (%s, %s, %s)
         """, (uuid_bytes, title, is_finished))
 
          # HistoryオブジェクトからSceneオブジェクトを1つずつ取り出す
@@ -255,8 +255,8 @@ class DBController:
             board_json = cls.convert_to_json(board_list)
 
             # scene_listテーブルにデータを追加
-            cls.cursor.execute("""
-                INSERT INTO scene_list (history_id, board_status, turn_player) VALUES (%s, %s, %s)
+            cls.cursor.execute(f"""
+                INSERT INTO {SCENE_LIST_TABLE_NAME} (history_id, board_status, turn_player) VALUES (%s, %s, %s)
             """, (uuid_bytes, board_json, turn_player))
 
         # データベースの変更を確定
@@ -281,9 +281,11 @@ class DBController:
         # Historyオブジェクトの作成
         history = History()
 
+        # TODO: ここから下のコードが正しく動作しているか確認
+
         # scene_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを取得
-        cls.cursor.execute("""
-            SELECT board_status, turn_player FROM scene_list WHERE history_id = %s
+        cls.cursor.execute(f"""
+            SELECT board_status, turn_player FROM {SCENE_LIST_TABLE_NAME} WHERE history_id = %s
         """, (uuid,))
 
         rows: list[tuple] = cls.cursor.fetchall()
@@ -318,20 +320,20 @@ class DBController:
         cls.initialize()
 
         # scene_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを削除
-        cls.cursor.execute("""
-            DELETE FROM scene_list WHERE history_id = %s
+        cls.cursor.execute(f"""
+            DELETE FROM {SCENE_LIST_TABLE_NAME} WHERE history_id = %s
         """, (uuid,))
 
         # history_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを削除
-        cls.cursor.execute("""
-            DELETE FROM history_list WHERE uuid = %s
+        cls.cursor.execute(f"""
+            DELETE FROM {INDEX_LIST_TABLE_NAME} WHERE uuid = %s
         """, (uuid,))
 
         # データベースの変更を確定
         cls.conn.commit()
 
     @classmethod
-    def get_all_indexes(cls) -> list[tuple]:
+    def get_all_indexes(cls) -> list[tuple[bytes, str, bool]]:
         """データベースから履歴のインデックスを取得するメソッド
 
         Returns:
@@ -342,8 +344,8 @@ class DBController:
         cls.initialize()
 
         # history_listテーブルから、全データのindexを取得
-        cls.cursor.execute("""
-            SELECT uuid, title, is_finished FROM history_list
+        cls.cursor.execute(f"""
+            SELECT uuid, title, is_finished FROM {INDEX_LIST_TABLE_NAME}
         """)
 
         # SELECT文の結果を取得

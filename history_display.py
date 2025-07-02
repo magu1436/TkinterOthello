@@ -144,7 +144,7 @@ class DeleteButton(Button):
         list_index = self.history_list.get_listbox_index()
 
         # indexを元に削除するデータのuuidを取得
-        uuid = self.history_list.uuid_list[list_index[0]]
+        uuid = self.history_list.uuid_list[list_index]
 
         # データベース上から対象となる履歴を削除
         DBController.delete(uuid)
