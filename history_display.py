@@ -1,7 +1,7 @@
 from tkinter import Frame, Label, Listbox, Button
 import tkinter as tk
 
-from display_items import SceneTransitionButton, Display
+from display_items import SceneTransitionButton, Display, get_display
 from history import DBController, History
 
 HOME_DISPLAY_BUTTON_TEXT = "ホームへ"
@@ -120,7 +120,8 @@ class RestoreButton(SceneTransitionButton):
         return DBController.restore(uuid)
     
     def trans_display(self):
-        is_finished = self.restore_selected_history().is_finished
+        history = self.restore_selected_history()
+        is_finished = history.is_finished
         if is_finished:
             self.trans_to = Display.SPECTATOR
         else:

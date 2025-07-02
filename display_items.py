@@ -1,7 +1,7 @@
 
 from typing import Callable, Literal
 from enum import StrEnum
-from tkinter import Misc
+from tkinter import Misc, Frame
 from tkinter.ttk import Button
 
 
@@ -48,3 +48,13 @@ class SceneTransitionButton(Button):
                 break
         if self.another_command is not None:
             self.another_command()
+
+def get_display(self, display: Display) -> Frame:
+    """指定のディスプレイのフレームを取得する関数
+    
+    Args:
+        display(Display): 取得したいフレームのディスプレイ
+    """
+    for child in self.master.winfo_toplevel().winfo_children():
+        if child.winfo_name() == display:
+            return child

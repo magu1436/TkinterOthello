@@ -6,11 +6,12 @@ from typing import Callable
 import tkinter
 from tkinter import Frame, Misc, Canvas
 from tkinter.ttk import Button
+import time
 
 from boardgame import Coordinate, BoardGamePhotoImage
 
 from objects import OthelloBoard, Stone, PutableSpaceTile
-from history import History, DBController
+from history import History, Scene, DBController
 from systems import OthelloPlayer, Color, CONFIG
 from errors import TkinterOthelloException
 from text_object import AutoFontLabel
@@ -19,7 +20,16 @@ from display_items import SceneTransitionButton, Display
 
 REDO_BUTTON_TEXT = "待った！！"
 SAVE_BUTTON_TEXT = "途中保存"
+SM_UNDO_BUTTON_TEXT = "一手戻す"
+SM_REDO_BUTTON_TEXT = "一手進める"
+SM_HOME_BUTTON_TEXT = "ホームへ戻る"
 
+TIME_CUT_IN = 2
+PASS_CUT_IN_IMAGE_RATIO_TO_DISPLAY: float = .6
+PASS_CUT_IN_IMAGE_PATH = CONFIG["PASS_CUT_IN_PATH"]
+CUT_IN_BG_IMAGE_PATH = CONFIG["PASS_CUT_IN_BG"]
+TIME_RAITIO_STOPPING_CUT_IN_ON_CENTER = .5
+FPS = 30
 
 class InvalidStonePlacementError(TkinterOthelloException):
     """石を置けない場所に置こうとしたときに投げられる例外
@@ -30,7 +40,7 @@ class InvalidStonePlacementError(TkinterOthelloException):
         stone: Stone = self.args[0]
         return f"Invalid stone placed at {stone.coordinate}: color {stone.color}"
 
-class NotExistsManagerDisplay(TkinterOthelloException):
+class NotExistsManagerDisplayError(TkinterOthelloException):
     """create_manager_displayメソッドを呼ばれる前にmanager_displayを参照しようとしたときに生じる"""
     def __str__(self):
         return "No 'ManagerDisplay' objects is created. Use create_manager_display method firstly."
@@ -63,7 +73,7 @@ class GameManager:
     @property
     def manager_display(self) -> ManagerDisplay:
         if self.__manager_display is None:
-            raise NotExistsManagerDisplay()
+            raise NotExistsManagerDisplayError()
         return self.__manager_display
 
     def create_manager_display(
@@ -241,10 +251,62 @@ class GameManager:
             return
         
         if len(putable_tiles_list) == 0:
+            self.pass_with_cut_in()
             self.turn_player.can_put = False
             self.change_turn()
         else:
             self.turn_player.can_put = True
+    
+    def pass_with_cut_in(self):
+        """パスのカットイン演出を実行するメソッド"""
+        display_size = self.othello_board.board_display_size + self.manager_display.display_size
+        cut_in_image = BoardGamePhotoImage(PASS_CUT_IN_IMAGE_PATH)
+        img_ratio = display_size.x * PASS_CUT_IN_IMAGE_RATIO_TO_DISPLAY / cut_in_image.width()
+        cut_in_image.resize((int(cut_in_image.width() * img_ratio), (int(cut_in_image.height() * img_ratio))))
+        cut_in_bg_image = BoardGamePhotoImage(
+            CUT_IN_BG_IMAGE_PATH,
+            (display_size.x, cut_in_image.height())
+        )
+
+        
+        stoppping_time = TIME_CUT_IN * TIME_RAITIO_STOPPING_CUT_IN_ON_CENTER
+        moving_time = (TIME_CUT_IN - stoppping_time) / 2
+
+        canvas = Canvas(
+            master=self.manager_display.winfo_toplevel(),
+            width=display_size.x, 
+            height=cut_in_image.height(), 
+            bd=0,
+            highlightthickness=0
+        )
+        canvas.create_image(
+            cut_in_bg_image.width() // 2,
+            cut_in_bg_image.height() // 2,
+            image=cut_in_bg_image
+        )
+        cut_in = canvas.create_image(
+            display_size.x,
+            cut_in_image.height() // 2,
+            image=cut_in_image
+        )
+        canvas.place(x=display_size.x//2, y=display_size.y//2, anchor="center")
+
+        frame_amount = moving_time * FPS
+        dt = moving_time / frame_amount
+        dx = display_size.x // frame_amount
+
+        # TODO: ここから実際に動かす処理を実装
+        def move():
+            for _ in range(int(frame_amount // 2)):
+                canvas.move(cut_in, -dx, 0)
+                canvas.master.update()
+                time.sleep(dt)
+        move()
+        time.sleep(stoppping_time)
+        move()
+        canvas.destroy()
+
+
     
     def set_putable_tiles(self, color: Color) -> tuple[PutableSpaceTile]:
         """置けるところを示すためのタイルを設置するメソッド
@@ -471,3 +533,173 @@ class ManagerDisplay(Frame):
         self.winner_label.destroy()
         self.home_button.destroy()
         self.new_game_button.destroy()
+
+
+class SpectatingManager:
+    """観戦モードの進行を担うクラス
+    
+    Attributes:
+        othello_board(OthelloBoard): 管理するオセロボード
+        history(History | None): 管理するゲームの履歴
+        turn_index(int): 現在描画しているターンの番号
+        turn_player(OthelloPlayer | None): 現在のターンプレイヤー"""
+
+    def __init__(
+            self,
+            othello_board: OthelloBoard,
+    ):
+        self.othello_board = othello_board
+        self.__manager_display: SpectatingManagerDisplay | None = None
+        self.history: History | None = None
+        self.turn_index: int = 0
+        self.turn_player: OthelloPlayer | None = None
+    
+    @property
+    def manager_display(self) -> SpectatingManager:
+        """`manager_display` のゲッター
+        
+        `create_manager_display` メソッドが呼ばれる前に参照された時、エラーを生じる
+        
+        Returns:
+            NotExistsManagerDisplayError: サブディスプレイが生成される前に参照されたとき生じる"""
+        if self.__manager_display is None:
+            raise NotExistsManagerDisplayError()
+        return self.__manager_display
+    
+    def create_manager_display(
+            self,
+            master: Misc,
+            display_size: tuple[int, int] | Coordinate
+    ) -> SpectatingManagerDisplay:
+        """サブディスプレイを生成して返すメソッド
+        
+        自身に記録処理も同時に行う
+        
+        Args:
+            master(Misc): マスター
+            display_size(tuple[int, int] | Coordinate): サブディスプレイの大きさ"""
+        self.__manager_display = SpectatingManagerDisplay(
+            master,
+            display_size,
+            self.undo,
+            self.redo,
+            self.reset,
+        )
+        return self.__manager_display
+
+    def create_game(self, history: History) -> None:
+        """観戦ゲームを作成するメソッド
+        
+        Args:
+            history(History): 観戦したいゲームの履歴"""
+        self.history = history
+        self.restore_scene(self.turn_index)
+    
+    def restore_scene(self, turn_index: int) -> None:
+        """指定ターンの `Scene` を復元して、盤面とサブディスプレイを更新するメソッド
+        
+        Args:
+            turn_index(int): 反映するターンの番号"""
+        scene: Scene = self.history[turn_index]
+        black_stone_count = 0
+        white_stone_count = 0
+        for row in scene.board:
+            for stone in row:
+                if stone is not None:
+                    self.othello_board.put(stone, stone.coordinate)
+                    match stone.color:
+                        case Color.BLACK: black_stone_count += 1
+                        case Color.WHITE: white_stone_count += 1
+        self.turn_player = scene.turn_player
+        self.__manager_display.update_display(
+            self.turn_player.name,
+            black_stone_count,
+            white_stone_count,
+        )
+        
+    def undo(self):
+        """一手戻すメソッド"""
+        if self.turn_index > 0:
+            self.turn_index -= 1
+            self.restore_scene(self.turn_index)
+
+    def redo(self):
+        """一手進めるメソッド"""
+        if self.turn_index < len(self.history):
+            self.turn_index += 1
+            self.restore_scene(self.turn_index)
+
+    def reset(self):
+        """観戦状態をリセットするメソッド"""
+        self.othello_board.take_all_pieces
+        self.turn_index = 0
+        self.turn_player = 0
+        self.history = None
+
+
+class SpectatingManagerDisplay(Frame):
+    
+    def __init__(
+            self,
+            master: Misc,
+            display_size: tuple[int, int],
+            undo_command: Callable[[], None],
+            redo_command: Callable[[], None],
+            reset_func: Callable[[], None],
+    ):
+        super().__init__(
+            master,
+            width=display_size[0],
+            height=display_size[1]
+        )
+        self.display_size = Coordinate(display_size)
+        self.turn_player_display = TurnPlayerDisplay(self, display_size[0])
+        self.black_stone_counter = CounterDisplay(
+            self,
+            Color.BLACK,
+            self.display_size.x // 2
+        )
+        self.white_stone_counter = CounterDisplay(
+            self,
+            Color.WHITE,
+            self.display_size.x // 2,
+        )
+        self.undo_button = Button(
+            self,
+            text=SM_UNDO_BUTTON_TEXT,
+            command=undo_command,
+        )
+        self.redo_button = Button(
+            self,
+            text=SM_REDO_BUTTON_TEXT,
+            command=redo_command,
+        )
+        self.home_button = SceneTransitionButton(
+            self,
+            SM_HOME_BUTTON_TEXT,
+            Display.HOME,
+            reset_func,
+        )
+
+        # 配置
+        self.turn_player_display.grid(row=0, column=0, columnspan=2, sticky=tkinter.W+tkinter.E)
+        self.black_stone_counter.grid(row=1, column=0, sticky=tkinter.W+tkinter.E)
+        self.white_stone_counter.grid(row=1, column=1, sticky=tkinter.W+tkinter.E)
+        self.redo_button.grid(row=2, column=0, sticky="we")
+        self.undo_button.grid(row=2, column=1, sticky="we")
+        self.home_button.grid(
+            row=3,
+            column=0,
+            columnspan=2,
+            sticky="we"
+        )
+
+    def update_display(
+            self,
+            player_name: str,
+            black_stone_count: int,
+            white_stone_count: int,
+    ):
+        self.turn_player_display.update_player_name(player_name)
+        self.black_stone_counter.update_counter(black_stone_count)
+        self.white_stone_counter.update_counter(white_stone_count)
