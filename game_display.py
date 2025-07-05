@@ -12,6 +12,13 @@ from game_manager import GameManager, ManagerDisplay
 
 
 class GameDisplay(Frame):
+    """ゲームディスプレイ
+    
+    Attributes:
+        display_size(Coordinate): 画面に表示される大きさ
+        othello_board(OthelloBoard): オセロボード
+        manager(GameManager): ゲームマネージャー
+        manager_display(ManagerDisplay): サブディスプレイ"""
 
     def __init__(self, master: Misc, grid_width: int):
         """コンストラクタ

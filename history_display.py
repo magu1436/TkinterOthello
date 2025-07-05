@@ -1,7 +1,7 @@
 from tkinter import Frame, Label, Listbox, Button
 import tkinter as tk
 
-from display_items import SceneTransitionButton, Display, get_display
+from display_items import SceneTransitionButton, Display
 from history import DBController, History
 
 HOME_DISPLAY_BUTTON_TEXT = "ホームへ"

@@ -1,7 +1,9 @@
+from __future__ import annotations
 
 from typing import Callable, Literal
 from enum import StrEnum
 from tkinter import Misc, Frame
+import tkinter
 from tkinter.ttk import Button
 
 
@@ -11,6 +13,17 @@ class Display(StrEnum):
     GAME = "game"
     HISTORY = "history"
     SPECTATOR = "spectator"
+
+    @classmethod
+    def get_display(cls, display: Display) -> Frame:
+        """指定のディスプレイのフレームを取得する関数
+        
+        Args:
+            display(Display): 取得したいフレームのディスプレイ
+        """
+        for child in tkinter._default_root.winfo_children():
+            if child.winfo_name() == display:
+                return child
 
 
 class SceneTransitionButton(Button):
@@ -48,13 +61,3 @@ class SceneTransitionButton(Button):
                 break
         if self.another_command is not None:
             self.another_command()
-
-def get_display(self, display: Display) -> Frame:
-    """指定のディスプレイのフレームを取得する関数
-    
-    Args:
-        display(Display): 取得したいフレームのディスプレイ
-    """
-    for child in self.master.winfo_toplevel().winfo_children():
-        if child.winfo_name() == display:
-            return child

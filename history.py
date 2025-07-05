@@ -283,7 +283,7 @@ class DBController:
 
         # TODO: ここから下のコードが正しく動作しているか確認
 
-        # scene_listテーブルから、uuidカラムの値がuuid_bytesと一致するデータを取得
+        # scene_listテーブルから、uuidカラムの値がuuidと一致するデータを取得
         cls.cursor.execute(f"""
             SELECT board_status, turn_player FROM {SCENE_LIST_TABLE_NAME} WHERE history_id = %s
         """, (uuid,))
@@ -303,6 +303,16 @@ class DBController:
 
             # 変換,修正したboardとturn_playerを用いてSceneオブジェクトを作成し、Historyオブジェクトへ追加
             history.append(board, turn_player)
+
+        # index_listテーブルからuuidカラムの値がuuidと一致するデータのis_finishedを取得
+        cls.cursor.execute(f"""
+            SELECT is_finished FROM {INDEX_LIST_TABLE_NAME} WHERE uuid = %s
+        """, (uuid,))
+
+        is_finished = cls.cursor.fetchall()[0]
+
+        # 取得したis_finishedでHistory.is_finishedを更新
+        history.is_finished = is_finished[0]
 
         return history
 

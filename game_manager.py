@@ -60,6 +60,14 @@ class Direction(Enum):
 
 
 class GameManager:
+    """ゲームの進行を管理するクラス
+    
+    Attributes:
+        othello_board(OthelloBoard): オセロのボード
+        players(tuple[OthelloPlayer]): オセロの参加者
+        manager_display(ManagerDisplay): GameDisplayのサブディスプレイ(外部から変更不可)
+        turn_player(OthelloPlayer): ターンプレイヤー
+        history(History): 履歴"""
     
     def __init__(
             self, 
