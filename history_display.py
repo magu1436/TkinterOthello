@@ -2,7 +2,8 @@ from tkinter import Frame, Label, Listbox, Button
 import tkinter as tk
 
 from display_items import SceneTransitionButton, Display
-from history import DBController, History
+from history import DBController, History, Scene
+from objects import OthelloBoard, Stone
 
 HOME_DISPLAY_BUTTON_TEXT = "ホームへ"
 RESTORE_HISTORY_BUTTON_TEXT = "復元"
@@ -118,6 +119,27 @@ class RestoreButton(SceneTransitionButton):
 
         # データベース上から対象となる履歴を取得
         return DBController.restore(uuid)
+    
+    def restore_board_status(self, history: History, othello_board: OthelloBoard):
+        """受け取ったHistoryをもとにboardを復元するメソッド
+        """
+        # Historyオブジェクトから末尾のSceneオブジェクトを取得
+        last_scene: Scene = history[-1]
+
+        # last_sceneからboardを取得
+        board_status: list[list[Stone | None]] = last_scene.board
+
+        # board_statusを1マスずつ参照し、othello_boardに駒を配置する
+        i = 0
+        for row in board_status:
+            j = 0
+            for stone in row:
+
+                othello_board.put(stone, (i, j))
+                j += 1
+
+            i += 1
+        
     
     def trans_display(self):
         history = self.restore_selected_history()
