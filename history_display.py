@@ -4,6 +4,7 @@ import tkinter as tk
 from display_items import SceneTransitionButton, Display
 from history import DBController, History, Scene
 from objects import OthelloBoard, Stone
+from game_display import GameDisplay
 
 HOME_DISPLAY_BUTTON_TEXT = "ホームへ"
 RESTORE_HISTORY_BUTTON_TEXT = "復元"
@@ -105,7 +106,7 @@ class RestoreButton(SceneTransitionButton):
 
     def __init__(self, master, history_list: HistoryList):
         self.history_list = history_list
-        super().__init__(master, RESTORE_HISTORY_BUTTON_TEXT, Display.SPECTATOR)
+        super().__init__(master, RESTORE_HISTORY_BUTTON_TEXT, Display.SPECTATOR, self.restore_board_status)
         self["command"] = self.trans_display
 
     def restore_selected_history(self) -> History:
@@ -113,18 +114,24 @@ class RestoreButton(SceneTransitionButton):
         
         DBcontroller.restore()でデータベースから履歴を取得し、復元を行う
         """
-
         # indexを元に削除するデータのuuidを取得
         uuid = self.history_list.uuid_list[self.history_list.get_listbox_index()]
 
         # データベース上から対象となる履歴を取得
         return DBController.restore(uuid)
     
-    def restore_board_status(self, history: History, othello_board: OthelloBoard):
-        """受け取ったHistoryをもとにboardを復元するメソッド
+    def restore_board_status(self):
+        """Historyをもとにboardを復元するメソッド
         """
+        history = self.restore_selected_history()
+
+        game_display: GameDisplay = Display.get_display(Display.GAME)
+
+        othello_board = game_display.othello_board
+
         # Historyオブジェクトから末尾のSceneオブジェクトを取得
         last_scene: Scene = history[-1]
+        print(last_scene.board)
 
         # last_sceneからboardを取得
         board_status: list[list[Stone | None]] = last_scene.board
@@ -134,11 +141,11 @@ class RestoreButton(SceneTransitionButton):
         for row in board_status:
             j = 0
             for stone in row:
-
-                othello_board.put(stone, (i, j))
+                othello_board.put(stone, (j, i))
                 j += 1
-
             i += 1
+
+        
         
     
     def trans_display(self):
@@ -168,6 +175,9 @@ class DeleteButton(Button):
 
         # indexを元に削除するデータのuuidを取得
         uuid = self.history_list.uuid_list[list_index]
+
+        # 削除するデータのuuidをuuid_listから削除
+        del self.history_list.uuid_list[list_index]
 
         # データベース上から対象となる履歴を削除
         DBController.delete(uuid)

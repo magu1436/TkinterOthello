@@ -378,7 +378,12 @@ class GameManager:
         self.change_turn()
 
     def save_progress(self):
-        """ゲームの途中経過を保存するメソッド"""
+        """ゲームの途中経過を保存するメソッド
+        """
+        # saveする前に最新の盤面状態をHistoryに追加
+        self.history.append(self.othello_board.board, self.turn_player)
+
+        # Historyをデータベースへ保存
         DBController.save(self.history)
 
 
