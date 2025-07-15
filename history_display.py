@@ -127,11 +127,21 @@ class RestoreButton(SceneTransitionButton):
 
         game_display: GameDisplay = Display.get_display(Display.GAME)
 
+        # 盤面へ石を再配置
+        self.restore_put_stone(game_display, history)
+
+        # 盤面へタイルを再配置
+
+        # サブディスプレイを更新
+
+
+    def restore_put_stone(self, game_display: GameDisplay, history: History):
+        """受け取ったHistoryオブジェクトをもとに石の再配置を行うメソッド
+        """
         othello_board = game_display.othello_board
 
         # Historyオブジェクトから末尾のSceneオブジェクトを取得
         last_scene: Scene = history[-1]
-        print(last_scene.board)
 
         # last_sceneからboardを取得
         board_status: list[list[Stone | None]] = last_scene.board
@@ -145,6 +155,10 @@ class RestoreButton(SceneTransitionButton):
                 j += 1
             i += 1
 
+    def restore_set_tiles(self, game_display: GameDisplay):
+        """再配置された石を元にタイルを配置するメソッド
+        """
+        game_manager = game_display.manager
         
         
     
