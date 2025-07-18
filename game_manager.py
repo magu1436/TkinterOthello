@@ -110,6 +110,7 @@ class GameManager:
             player.can_put = True
 
         self.othello_board.init_board()
+        self.othello_board.reset_tiles()
         self.set_putable_tiles(self.turn_player.color)
         
         self.history: History = History()
@@ -483,7 +484,7 @@ class ManagerDisplay(Frame):
         self.black_stone_counter = CounterDisplay(self, Color.BLACK, self.display_size.x // 2)
         self.white_stone_counter = CounterDisplay(self, Color.WHITE, self.display_size.x // 2)
         self.redo_button = Button(self, text=REDO_BUTTON_TEXT, command=redo_command)
-        self.save_button = SaveButton(self, game_manager)
+        self.save_button = SceneTransitionButton(self, SAVE_BUTTON_TEXT, Display.HOME, lambda: (game_manager.save_progress(), self.reset_game()))
 
         self.game_reset_func: Callable = game_reset_func
 

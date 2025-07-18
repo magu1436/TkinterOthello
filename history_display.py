@@ -5,6 +5,8 @@ from display_items import SceneTransitionButton, Display
 from history import DBController, History, Scene
 from objects import OthelloBoard, Stone
 from game_display import GameDisplay
+from game_manager import GameManager
+from systems import OthelloPlayer
 
 HOME_DISPLAY_BUTTON_TEXT = "ホームへ"
 RESTORE_HISTORY_BUTTON_TEXT = "復元"
@@ -106,7 +108,7 @@ class RestoreButton(SceneTransitionButton):
 
     def __init__(self, master, history_list: HistoryList):
         self.history_list = history_list
-        super().__init__(master, RESTORE_HISTORY_BUTTON_TEXT, Display.SPECTATOR, self.restore_board_status)
+        super().__init__(master, RESTORE_HISTORY_BUTTON_TEXT, Display.SPECTATOR)
         self["command"] = self.trans_display
 
     def restore_selected_history(self) -> History:
@@ -123,26 +125,39 @@ class RestoreButton(SceneTransitionButton):
     def restore_board_status(self):
         """Historyをもとにboardを復元するメソッド
         """
-        history = self.restore_selected_history()
+        # restore_selected_history()を使用してHistoryオブジェクトを取得
+        history: History = self.restore_selected_history()
 
+        # GameDisplayオブジェクトを取得
         game_display: GameDisplay = Display.get_display(Display.GAME)
 
+        # GameDisplayオブジェクトからGameManagerオブジェクトを取得
+        game_manager: GameManager = game_display.manager
+
+        # GameDisplayオブジェクトからboardを取得
+        othello_board: OthelloBoard = game_display.othello_board
+
+        # historyから末尾のSceneオブジェクトを取得
+        last_scene: Scene = history[-1]
+
+        # last_sceneからturn_playerを取得
+        turn_player = last_scene.turn_player
+
+        # GameManagerが持っているHistoryオブジェクトを,historyに変更
+        game_manager.history = history
+
         # 盤面へ石を再配置
-        self.restore_put_stone(game_display, history)
+        self.restore_put_stone(othello_board, last_scene)
 
         # 盤面へタイルを再配置
+        self.restore_set_tiles(game_manager, othello_board, turn_player)
 
         # サブディスプレイを更新
 
 
-    def restore_put_stone(self, game_display: GameDisplay, history: History):
+    def restore_put_stone(self, othello_board: OthelloBoard, last_scene: Scene):
         """受け取ったHistoryオブジェクトをもとに石の再配置を行うメソッド
         """
-        othello_board = game_display.othello_board
-
-        # Historyオブジェクトから末尾のSceneオブジェクトを取得
-        last_scene: Scene = history[-1]
-
         # last_sceneからboardを取得
         board_status: list[list[Stone | None]] = last_scene.board
 
@@ -155,10 +170,17 @@ class RestoreButton(SceneTransitionButton):
                 j += 1
             i += 1
 
-    def restore_set_tiles(self, game_display: GameDisplay):
+    def restore_set_tiles(self, game_manager: GameManager, othello_board: OthelloBoard, turn_player: OthelloPlayer):
         """再配置された石を元にタイルを配置するメソッド
         """
-        game_manager = game_display.manager
+        # 引数で受け取ったturn_playerからColorを取得
+        color = turn_player.color
+        
+        # すでに配置されているタイルを全て削除
+        othello_board.reset_tiles()
+
+        # タイルの再配置
+        game_manager.set_putable_tiles(color)
         
         
     
@@ -169,6 +191,7 @@ class RestoreButton(SceneTransitionButton):
             self.trans_to = Display.SPECTATOR
         else:
             self.trans_to = Display.GAME
+            self.restore_board_status()
         super().trans_display()
 
 
