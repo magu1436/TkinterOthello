@@ -55,6 +55,8 @@ class HistoryList(Listbox):
     def show_indexes(self):
         """データベースからindexを取得し、listboxに表示するメソッド
         """
+        HistoryList.uuid_list = []
+
         # indexデータの取得
         all_index = DBController.get_all_indexes()
 
