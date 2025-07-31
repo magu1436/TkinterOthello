@@ -613,13 +613,15 @@ class SpectatingManager:
         
         Args:
             turn_index(int): 反映するターンの番号"""
+        self.othello_board.take_all_pieces()
         scene: Scene = self.history[turn_index]
         black_stone_count = 0
         white_stone_count = 0
-        for row in scene.board:
-            for stone in row:
+        for y in range(len(scene.board)):
+            for x in range(len(scene.board[0])):
+                stone: Stone | None = scene.board[y][x]
                 if stone is not None:
-                    self.othello_board.put(stone, stone.coordinate)
+                    self.othello_board.put(stone, (x, y))
                     match stone.color:
                         case Color.BLACK: black_stone_count += 1
                         case Color.WHITE: white_stone_count += 1
@@ -638,7 +640,7 @@ class SpectatingManager:
 
     def redo(self):
         """一手進めるメソッド"""
-        if self.turn_index < len(self.history):
+        if self.turn_index < len(self.history) - 1:
             self.turn_index += 1
             self.restore_scene(self.turn_index)
 
