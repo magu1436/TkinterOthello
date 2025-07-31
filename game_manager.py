@@ -246,7 +246,8 @@ class GameManager:
             return
         
         if len(putable_tiles_list) == 0:
-            self.pass_with_cut_in()
+            if not all([all([stone for stone in row]) for row in self.othello_board.board]):
+                self.pass_with_cut_in()
             self.turn_player.can_put = False
             self.change_turn()
         else:
