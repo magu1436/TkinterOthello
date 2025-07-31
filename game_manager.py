@@ -537,7 +537,7 @@ class ManagerDisplay(Frame):
         self.new_game_button = Button(
             self, text="新しいゲーム", command=self.reset_game
         )
-        self.new_game_button.grid(row=4, column=1, sticky="ew")
+        self.new_game_button.grid(row=5, column=0, columnspan=2, sticky="ew")
     
     def reset_game(self):
         self.game_reset_func()
