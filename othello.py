@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import tkinter
 
+import mysql
+
 from systems import CONFIG
 from game_display import GameDisplay
 from history_display import HistoryDisplay
@@ -22,8 +24,13 @@ def main():
     game_display = GameDisplay(root, 5)
     game_display.grid(row=0, column=0, sticky="nsew")
 
-    history_display = HistoryDisplay(root)
-    history_display.grid(row=0, column=0, sticky="nsew")
+    try:
+        is_using_database = True
+        history_display = HistoryDisplay(root)
+        history_display.grid(row=0, column=0, sticky="nsew")
+    except mysql.connector.errors.InterfaceError:
+        history_display = None
+        is_using_database = False
 
     home_display = HomeDisplay(root, game_display, history_display)
     home_display.grid(row=0, column=0, sticky="nsew")
@@ -32,6 +39,9 @@ def main():
     spectator_display.grid(row=0, column=0, sticky="nsew")
 
     home_display.tkraise()
+
+    if not is_using_database:
+        game_display.manager_display.save_button["state"] = "disable"
 
     root.mainloop()
 
