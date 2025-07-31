@@ -485,6 +485,7 @@ class ManagerDisplay(Frame):
         self.white_stone_counter = CounterDisplay(self, Color.WHITE, self.display_size.x // 2)
         self.redo_button = Button(self, text=REDO_BUTTON_TEXT, command=redo_command)
         self.save_button = SceneTransitionButton(self, SAVE_BUTTON_TEXT, Display.HOME, lambda: (game_manager.save_progress(), self.reset_game()))
+        self.home_button = SceneTransitionButton(self, "ホーム画面へ", Display.HOME, self.reset_game)
 
         self.game_reset_func: Callable = game_reset_func
 
@@ -494,6 +495,8 @@ class ManagerDisplay(Frame):
         self.white_stone_counter.grid(row=1, column=1, sticky=tkinter.W+tkinter.E)
         self.redo_button.grid(row=2, column=0, columnspan=2, sticky=tkinter.W+tkinter.E)
         self.save_button.grid(row=3, column=0, columnspan=2, sticky=tkinter.W+tkinter.E)
+        self.home_button.grid(row=4, column=0, columnspan=2, sticky=tkinter.W+tkinter.E)
+        
 
     def update_display(
             self,
@@ -529,13 +532,6 @@ class ManagerDisplay(Frame):
         )
         self.winner_label.grid(row=3, column=0, columnspan=2, sticky="ew")
 
-        self.home_button = SceneTransitionButton(
-            self,
-            "ホーム画面へ",
-            Display.HOME,
-            self.reset_game
-        )
-        self.home_button.grid(row=4, column=0, sticky="ew")
 
         self.new_game_button = Button(
             self, text="新しいゲーム", command=self.reset_game
@@ -544,9 +540,12 @@ class ManagerDisplay(Frame):
     
     def reset_game(self):
         self.game_reset_func()
-        self.winner_label.destroy()
-        self.home_button.destroy()
-        self.new_game_button.destroy()
+
+        if hasattr(self, "new_game_button"):
+            self.new_game_button.destroy()
+        
+        if hasattr(self, "winner_label"):
+            self.winner_label.destroy()
 
 
 class SpectatingManager:

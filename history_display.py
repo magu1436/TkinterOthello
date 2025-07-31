@@ -5,7 +5,7 @@ from display_items import SceneTransitionButton, Display
 from history import DBController, History, Scene
 from objects import OthelloBoard, Stone
 from game_display import GameDisplay
-from game_manager import GameManager
+from game_manager import GameManager, ManagerDisplay
 from systems import OthelloPlayer
 
 HOME_DISPLAY_BUTTON_TEXT = "ホームへ"
@@ -137,6 +137,9 @@ class RestoreButton(SceneTransitionButton):
         # GameDisplayオブジェクトからboardを取得
         othello_board: OthelloBoard = game_display.othello_board
 
+        # GameDisplayオブジェクトからManagerDisplayオブジェクトを取得
+        manager_display: ManagerDisplay = game_display.manager_display
+
         # historyから末尾のSceneオブジェクトを取得
         last_scene: Scene = history[-1]
 
@@ -181,6 +184,11 @@ class RestoreButton(SceneTransitionButton):
 
         # タイルの再配置
         game_manager.set_putable_tiles(color)
+
+    def restore_update_managerdisplay(self, manager_display: ManagerDisplay):
+        """マネジャーディスプレイを更新するメソッド
+        """
+        
         
         
     
