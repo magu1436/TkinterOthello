@@ -145,20 +145,20 @@ class RestoreButton(SceneTransitionButton):
         # historyから末尾のSceneオブジェクトを取得
         last_scene: Scene = history[-1]
 
-        # last_sceneからturn_playerを取得
-        turn_player = last_scene.turn_player
+        # last_sceneの1つ前のsceneからturn_playerを取得
+        turn_player = history[-2].turn_player
 
         # GameManagerが持っているHistoryオブジェクトを,historyに変更
         game_manager.history = history
 
+        # GameManagerがもっているturn_player属性をturn_playerに変更
+        game_manager.turn_player = turn_player
+
         # 盤面へ石を再配置
         self.restore_put_stone(othello_board, last_scene)
 
-        # 盤面へタイルを再配置
-        self.restore_set_tiles(game_manager, othello_board, turn_player)
-
-        # サブディスプレイを更新
-
+        # タイルの再配置とサブディスプレイの更新
+        game_manager.change_turn()
 
     def restore_put_stone(self, othello_board: OthelloBoard, last_scene: Scene):
         """受け取ったHistoryオブジェクトをもとに石の再配置を行うメソッド
@@ -174,24 +174,6 @@ class RestoreButton(SceneTransitionButton):
                 othello_board.put(stone, (j, i))
                 j += 1
             i += 1
-
-    def restore_set_tiles(self, game_manager: GameManager, othello_board: OthelloBoard, turn_player: OthelloPlayer):
-        """再配置された石を元にタイルを配置するメソッド
-        """
-        # 引数で受け取ったturn_playerからColorを取得
-        color = turn_player.color
-        
-        # すでに配置されているタイルを全て削除
-        othello_board.reset_tiles()
-
-        # タイルの再配置
-        game_manager.set_putable_tiles(color)
-
-    def restore_update_managerdisplay(self, manager_display: ManagerDisplay):
-        """マネジャーディスプレイを更新するメソッド
-        """
-        
-        
         
     
     def trans_display(self):

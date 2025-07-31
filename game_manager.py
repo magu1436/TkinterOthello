@@ -365,7 +365,7 @@ class GameManager:
         winner = self.players[0] if self.players[0].color == winner_color else self.players[1]
         self.manager_display.indicate_victory_scene(winner)
         self.history.is_finished = True
-        DBController.save(self.history)
+        self.save_progress()
     
     def redo(self):
         """一手戻る処理を行うメソッド."""
