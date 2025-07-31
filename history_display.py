@@ -7,6 +7,8 @@ from objects import OthelloBoard, Stone
 from game_display import GameDisplay
 from game_manager import GameManager, ManagerDisplay
 from systems import OthelloPlayer
+from game_manager import SpectatingManager
+from spectator_display import SpectatorDisplay
 
 HOME_DISPLAY_BUTTON_TEXT = "ホームへ"
 RESTORE_HISTORY_BUTTON_TEXT = "復元"
@@ -179,6 +181,9 @@ class RestoreButton(SceneTransitionButton):
         is_finished = history.is_finished
         if is_finished:
             self.trans_to = Display.SPECTATOR
+            spectator_display: SpectatorDisplay = Display.get_display(self.trans_to)
+            spectating_manager: SpectatingManager = spectator_display.manager
+            spectating_manager.create_game(history)
         else:
             self.trans_to = Display.GAME
             self.restore_board_status()

@@ -38,8 +38,8 @@ class SpectatorDisplay(Frame):
 
         self.manager_display: SpectatingManagerDisplay = self.manager.create_manager_display(
             self,
-            self.display_size - (self.othello_board.x, 0),
+            self.display_size - (self.othello_board.board_display_size.x, 0),
         )
 
         self.othello_board.pack(side="left")
-        self.othello_board.pack(side="left")
+        self.manager_display.pack(side="right")
